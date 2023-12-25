@@ -1,0 +1,4 @@
+test/
+tool/
+generate-model.js
+typings/

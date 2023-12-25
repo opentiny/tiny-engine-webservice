@@ -1,0 +1,86 @@
+{
+  "name": "tiny-engine-webservice",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "egg": {
+    "typescript": true,
+    "declarations": true
+  },
+  "scripts": {
+    "start": "egg-scripts start --daemon --stdout=/opt/cloud/logs/master-stdout.log --stderr=/opt/cloud/logs/master-stderr.log --title=lowcode-webservice",
+    "stop": "egg-scripts stop --stdout=/opt/cloud/logs/master-stdout.log --stderr=/opt/cloud/logs/master-stderr.log --title=lowcode-webservice",
+    "dev": "egg-bin dev --port 7011",
+    "debug": "egg-bin debug --port 7011",
+    "test-local": "egg-bin test",
+    "test": "npm run lint -- --fix && npm run test-local",
+    "cov": "egg-bin cov",
+    "part-test": "egg-bin test",
+    "tsc": "ets && tsc -p tsconfig.json",
+    "lint": "eslint . --ext .ts --fix",
+    "clean": "ets clean"
+  },
+  "nyc": {
+    "check-coverage": false,
+    "lines": 60,
+    "statements": 60,
+    "functions": 60,
+    "branches": 60
+  },
+  "dependencies": {
+    "@opentiny/tiny-engine-block-build": "^0.0.1-alpha.0",
+    "@opentiny/tiny-engine-dsl-vue": "^1.0.3-alpha.0",
+    "@opentiny/tiny-engine-transform": "^1.0.0",
+    "compressing": "^1.7.0",
+    "egg": "^3.17.5",
+    "egg-amqplib": "^2.0.5",
+    "egg-cors": "^2.2.3",
+    "egg-redis": "^2.5.0",
+    "egg-router-plus": "^2.0.0",
+    "egg-scripts": "^2.6.0",
+    "egg-ts-helper": "^1.25.7",
+    "egg-validate": "^2.0.2",
+    "egg-view-ejs": "^2.0.1",
+    "esdk-obs-nodejs": "^3.21.6",
+    "fs-extra": "^10.1.0",
+    "glob": "^10.3.10",
+    "http-proxy-middleware": "^2.0.6",
+    "http-status-codes": "^2.2.0",
+    "koa-connect": "^2.1.0",
+    "moment": "^2.29.4",
+    "proxy-agent": "^5.0.0",
+    "qs": "^6.10.1",
+    "typescript": "^4.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.40",
+    "@types/node": "^12.20.16",
+    "@types/supertest": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.35.1",
+    "cross-spawn": "^7.0.3",
+    "egg-bin": "^4.11.0",
+    "egg-mock": "^3.26.0",
+    "eslint": "^7.32.0",
+    "eslint-config-egg": "^8.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.7.1",
+    "tslib": "^1.9.0"
+  },
+  "resolutions": {
+    "@types/node": "^12.20.16"
+  },
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "eslintIgnore": [
+    "coverage"
+  ],
+  "author": "",
+  "license": "MIT"
+}

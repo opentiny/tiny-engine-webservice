@@ -1,0 +1,17 @@
+{
+  // extend your base config so you don't have to redefine your compilerOptions
+  "extends": "./tsconfig.json",
+  "include": [
+    "app/**/*.ts",
+    "app/**/**/*.ts",
+    "config/**/*.ts",
+    "test/**/*.ts",
+    "*.ts",
+
+    // if you are going to parse JS files
+    "app/**/*.js",
+    ".eslintrc.js",
+    "*.js"
+  ],
+  "exclude": ["app/views", "node_modules*"]
+}

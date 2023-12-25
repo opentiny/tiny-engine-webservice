@@ -1,0 +1,12 @@
+.cache
+.project_build
+.vscode
+logs
+run
+dist
+build
+deploy
+typings
+coverage
+package-lock.json
+**/node_modules/**
