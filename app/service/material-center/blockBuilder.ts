@@ -14,7 +14,6 @@ import fs from 'fs-extra'
 import { Service } from 'egg';
 import { E_TASK_STATUS } from '../../lib/enum'
 import {glob} from 'glob'
-
 export default class BlockBuilder extends Service{
   unpkgBaseUrl = 'https://npm.onmicrosoft.cn'
   pkgName
@@ -22,10 +21,11 @@ export default class BlockBuilder extends Service{
   // 将服务分为两种，一种是BuildService , 一种是操作数据库的DataService
  
   async start(blockId, taskId, body) {
+    const {task} = this.ctx.service
     this.ctx.logger.info('开始区块构建', blockId, taskId)
     // 查询区块数据
     const { data: block } = await this.service.materialCenter.block.findById(blockId)
-    await this.service.task.update({
+    await task.update({
       id: taskId,
       progress: 'generating code',
       taskStatus: E_TASK_STATUS.RUNNING
@@ -38,18 +38,12 @@ export default class BlockBuilder extends Service{
       needToSave
     } = body
 
-    await this.service.task.update({
-      id: taskId,
-      progress: 'generating code',
-      taskStatus: E_TASK_STATUS.RUNNING
-    })
-
     const modifiedBlock = { ...block, ...others, id: blockId, version: blockVersion }
 
     try {
       // 调用DSL转换方法生成代码
       const sourceCode = await this.translate(modifiedBlock, { content })
-      await this.service.task.update({
+      await task.update({
         id: taskId,
         progress: 'generating code completed',
         progress_percent: 10
@@ -123,9 +117,10 @@ export default class BlockBuilder extends Service{
     if (needToSave) {
       blockData.content = content
     }
-
-    await this.service.BlockService.update(blockData)
-    await this.service.task.update({
+   
+    await this.service.materialCenter.block.update(blockData)
+    const {task} = this.ctx.service
+    await task.update({
       id: taskId,
       progress_percent: 100,
       taskResult: JSON.stringify({ result: 'block building completed' }),
@@ -135,6 +130,7 @@ export default class BlockBuilder extends Service{
 
   // 错误处理统一方法
   async afterBuildFailed(blockId, taskId, error) {
+    const {task} = this.ctx.service
     this.ctx.logger.error(`build block ${blockId} error:`, error)
    
     const buildInfo = { result: false, message: error.message, endTime: new Date().toLocaleString() }
@@ -142,7 +138,7 @@ export default class BlockBuilder extends Service{
       id: blockId,
       last_build_info: buildInfo
     })
-    await this.service.task.update({
+    await task.update({
       id: taskId,
       taskStatus: E_TASK_STATUS.STOPPED,
       taskResult: JSON.stringify({ result: error.message })
@@ -150,24 +146,22 @@ export default class BlockBuilder extends Service{
   }
 
   async buildWebComponent(sourceCode, block, taskId, version) {
-    const { framework = 'Vue', label } = block
-    const BuildService = {
-      Vue: this.service.materialCenter.vueBlockBuilder
-    }
+    const { label } = block
     // 初始化构建目录
-    const service = new BuildService[framework]()
+    const service = this.service.materialCenter.vueBlockBuilder
+    const {task} = this.ctx.service
     try {
-      await this.service.task.update({ id: taskId, progress: 'installing deps' })
+      await task.update({ id: taskId, progress: 'installing deps' })
       await service.init()
-      await this.service.task.update({ id: taskId, progress: 'deps installed', progress_percent: 40 })
-      const config = await service.readConfig()
+      await task.update({ id: taskId, progress: 'deps installed', progress_percent: 40 })
+      const config: any = await service.readConfig()
       // 写入口文件
       if (service.writeEntryFile) {
         await service.writeEntryFile(block, config.path, version)
       }
       // 注入代码
       await service.injectCodeFile(sourceCode, config.path)
-      await this.service.task.update({ id: taskId, progress: 'code injected', progress_percent: 50 })
+      await task.update({ id: taskId, progress: 'code injected', progress_percent: 50 })
       // 写配置
       const className = this.kebabToPascalCase(label)
       config.data = {
@@ -179,14 +173,14 @@ export default class BlockBuilder extends Service{
           componentPath: sourceCode.find((c) => c.type === 'Block')?.filePath ?? '' // 指定block路径
         }
       }
-      await this.service.task.update({ id: taskId, progress: 'write config', progress_percent: 55 })
+      await task.update({ id: taskId, progress: 'write config', progress_percent: 55 })
       await service.writeConfig(JSON.stringify(config, null, 2))
-      await this.service.task.update({ id: taskId, progress: 'building', progress_percent: 60 })
+      await task.update({ id: taskId, progress: 'building', progress_percent: 60 })
       // 清理dist目录
       service.clearDist()
       // 构建
       await service.build()
-      await this.service.task.update({ id: taskId, progress: 'building completed', progress_percent: 80 })
+      await task.update({ id: taskId, progress: 'building completed', progress_percent: 80 })
       // 返回静态资源输出路径
       const distPath = service.getDist()
       // 转换config.umd.min.js配置文件为 bundle.json
@@ -194,7 +188,7 @@ export default class BlockBuilder extends Service{
       // 发布区块到 npm
       const filesPath = await this.publish(distPath, block, version)
       // 获取构建原料版本
-      const versions = service.getBuildInfo([BuildService[framework].baseNpm])
+      const versions = service.getBuildInfo([service.baseNpm])
       return { filesPath, versions }
     } finally {
       await service.clear()
@@ -237,7 +231,7 @@ export default class BlockBuilder extends Service{
       blocksData = innerBlocks.data.map(({ content, label }) => ({ content, label })).filter((b) => b.label !== label)
     }
 
-    const { generateCode } = require('@opentiny/lowcode-dsl-vue')
+    const { generateCode } = require('@opentiny/tiny-engine-dsl-vue')
     const result = generateCode({ pageInfo: { schema: content, name: label }, blocksData })
     return result
   }
@@ -294,11 +288,12 @@ export default class BlockBuilder extends Service{
   async publishPackage(folder, blockInfo, version) {
     const pkgJson = this.generatePackageJson(blockInfo, version)
     await fs.writeJson(path.resolve(folder, './package.json'), pkgJson)
-    const loginInRes = await this.service.cnpmService.loginInNpm(folder)
+    const { cnpm } = this.ctx.service;
+    const loginInRes = await cnpm.loginInNpm(folder)
     if (!loginInRes.isSuccess) {
       return loginInRes
     }
-    return this.service.cnpmService.publishCnpm(folder)
+    return cnpm.publishCnpm(folder)
   }
 
   // 生成npm 包的package.json

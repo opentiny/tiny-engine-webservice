@@ -277,13 +277,13 @@ export default (appInfo) => {
     };
   };
 
-  config.cnpmRegistryOptions = [
+  config.npmRegistryOptions = [
     '--registry=https://registry.npmjs.org/',
   ];
 
   config.buildground = '/tmp/buildground';
   config.baseNpm = '@opentiny/tiny-engine-block-build';
-  config.authToken = process.env.NPM_AUTH_TOKEN; // 替换为自己的npm token
+  config.authToken = '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'; // 替换为自己的npm token
   config.registry = 'registry.npmjs.org/';
 
   return config;

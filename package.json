@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "@opentiny/tiny-engine-block-build": "^0.0.1-alpha.0",
-    "@opentiny/tiny-engine-dsl-vue": "^1.0.3-alpha.0",
-    "@opentiny/tiny-engine-transform": "^1.0.0",
+    "@opentiny/tiny-engine-dsl-vue": "~1.0.1",
+    "@opentiny/tiny-engine-transform": "^1.0.0-alpha.1",
     "compressing": "^1.7.0",
     "egg": "^3.17.5",
     "egg-amqplib": "^2.0.5",

@@ -124,10 +124,10 @@ export default class BlockController extends Controller {
       createParam.tags = createParam.tags.filter((tag) => !!tag);
     }
     // 处理区块截图
-    if (createParam.screenshot) {
-      const url = await this.service.materialCenter.block.handleScreenshot(createParam);
-      createParam.screenshot = url;
-    }
+    // if (createParam.screenshot) {
+    //  const url = await this.service.materialCenter.block.handleScreenshot(createParam);
+    //  createParam.screenshot = url;
+    //  }
     this.ctx.body = await this.service.materialCenter.block.create(createParam);
   }
   
@@ -155,8 +155,8 @@ export default class BlockController extends Controller {
     }
     // 处理区块截图
     if (updateParam.screenshot && updateParam.label) {
-      const url = await this.service.materialCenter.block.handleScreenshot(updateParam);
-      updateParam.screenshot = url;
+      //const url = await this.service.materialCenter.block.handleScreenshot(updateParam);
+      updateParam.screenshot = '';
     } else {
       // 不更新 screenshot, 避免screenshot为空字符串覆盖上次值
       delete updateParam.screenshot;
@@ -166,14 +166,16 @@ export default class BlockController extends Controller {
 
   async delete() {
     const { id } = this.ctx.params;
-    const { obs } = this.service;
+    //const { obs } = this.service;
     const res = await this.service.materialCenter.block.delete({ id });
     // 批量删除obs资源
+    /*
     const { label } = res.data;
     const keyObjs: Array<any> = await obs.list(label, 'block');
     if (keyObjs.length > 0) {
       await obs.delete({ Objects: keyObjs });
     }
+    */
     this.ctx.body = res;
   }
   async build() {
@@ -196,7 +198,8 @@ export default class BlockController extends Controller {
       throwApiError('', Number(E_ErrorCode.BadRequest), E_MaterialErrorCode.CM205);
     }
     // 处理区块截图
-    block.screenshot = await materialCenter.block.handleScreenshot(block);
+    // block.screenshot = await materialCenter.block.handleScreenshot(block);
+    block.screenshot = '';
     // 更新i18n 信息
     block.i18n = await materialCenter.block.getBlockI18n(id);
     // 如果有未完成的任务直接返回该任务信息

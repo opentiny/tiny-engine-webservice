@@ -31,5 +31,5 @@ export default class CnpmService extends Service {
     const commands = ['npm publish --access=public'];
     return this.ctx.helper.execCommandWithCatch(commands, { cwd: packagePath }, 'publish cnpm');
   }
-
+    
 }
