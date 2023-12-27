@@ -19,7 +19,6 @@ export default class CnpmService extends Service {
   async loginInNpm(packagePath) {
     const commands = [
       'npm config set strict-ssl false',
-      'npm config set always-auth true',
       `npm config set registry https://${this.registry}`,
       `npm config set //${this.registry}:_authToken=${this.authToken}`,
       `npm whoami --registry https://${this.registry}`

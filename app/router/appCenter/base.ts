@@ -24,6 +24,7 @@ export default (app: Application) => {
   // 应用管理
 
   subRouter.get('/apps/detail/:id', controller.appCenter.apps.detail);
+  subRouter.post('/apps/update/:id', controller.appCenter.apps.update);
 
   // 关联应用信息，主要是apps下block-histories
   subRouter.get('/apps/associate', controller.appCenter.apps.associate);
