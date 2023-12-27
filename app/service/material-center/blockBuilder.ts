@@ -57,7 +57,7 @@ export default class BlockBuilder extends Service{
       const buildResult = { result: true, versions, endTime: new Date().toLocaleString() }
 
       const buildInfo = {
-        buildResult,
+        ...buildResult,
         message,
         filesPath,
         taskId
