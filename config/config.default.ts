@@ -285,6 +285,8 @@ export default (appInfo) => {
   config.baseNpm = '@opentiny/tiny-engine-block-build';
   config.authToken = process.env.NPM_AUTH_TOKEN; // 替换为自己的npm token
   config.registry = 'registry.npmjs.org/';
+  config.projectName = process.env.GIT_REPO;     // 应用发布git仓库地址
+  config.gitBranch = process.env.GIT_BRANCH;     // 应用发布git代码默认提交分支
 
   return config;
 };
