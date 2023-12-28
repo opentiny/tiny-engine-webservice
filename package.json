@@ -90,10 +90,6 @@
   "engines": {
     "node": ">=8.9.0"
   },
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
   "eslintIgnore": [
     "coverage"
   ]
