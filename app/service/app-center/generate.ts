@@ -607,7 +607,7 @@ export default createRouter({
   }
 
   private async generateGlobalState () {
-    const { global_state } = this.schema;
+    const { global_state } = this.schema.meta;
     let globalState: {
       actions?: {
         [key:string]: {
@@ -634,33 +634,28 @@ export default createRouter({
     const res:any = []
     const ids:any[] = []
 
+    const getStoreFnStrs = (getters: Record<string, { type?: string; value?: string }> = {}) =>
+      Object.values(getters)
+        .map(({ value }) => value?.replace(/function /, ''))
+        .join(',\n');
+
     for (const stateItem of globalState) {
       let importStatement = "import { defineStore } from 'pinia'"
       const { id, state, getters, actions } = stateItem
 
       ids.push(id)
 
-      const stateExpression = `() => ({ ${Object.entries(state)
-        .map((item) => item.join(':'))
-        .join(',')} })`
-
-      const getterExpression = Object.entries(getters || {})
-        .filter((item) => item[1]?.type === 'JSFunction')
-        .map(([key, value]) => `${key}: ${value.value}`)
-        .join(',')
-
-      const actionExpressions = Object.entries(actions || {})
-        .filter((item) => item[1]?.type === 'JSFunction')
-        .map(([key, value]) => `${key}: ${value.value}`)
-        .join(',')
-
       const storeFiles = `
         ${importStatement}
         export const ${id} = defineStore({
-          id: ${id},
-          state: ${stateExpression},
-          getters: { ${getterExpression} },
-          actions: { ${actionExpressions} }
+          id: '${id}',
+          state: () => (${JSON.stringify(state)}),
+          getters: {
+            ${getStoreFnStrs(getters)}
+          },
+          actions: {
+            ${getStoreFnStrs(actions)}
+          }
         })
       `
       const fileName = `${id}.js`
