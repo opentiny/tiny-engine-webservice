@@ -46,9 +46,8 @@ class PublishApp extends DataServcice {
 
     try {
       await generate.init(appId);
-
-      const appInfo = await this.service.appCenter.apps.getAppById(Number(appId));
-      const { project_name, branch } = appInfo.data || {};
+      const project_name = this.config.projectName;
+      const branch = this.config.gitBranch;
       const git_branch = this.bodyParam.branch || branch;
       const canCreateNewBranch = this.bodyParam.canCreateNewBranch || false;
 
