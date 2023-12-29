@@ -3,7 +3,7 @@
     <img alt="OpenTiny Logo" src="logo.svg" height="100" style="max-width:100%;">
   </a>
 </p>
-<p align="center">TinyEngine enables developers to customize low-code platforms, build low-bit platforms online in real time, and support secondary development or integration of low-bit platform capabilities.</p>
+<p align="center">TinyEngine Web Service is a RESTful API responsible for providing data services, code generation services, and code release services to the front end.  It does not directly operate on the database, and data operations request interfaces from TinyEngine Data Center.</p>
 
 
 English | [简体中文](README.zh-CN.md)
@@ -70,7 +70,9 @@ Before development, you need to understand the overall directory structure of th
 
 
 ### Interface Return Specifications
+
 ##### 1.Return Format
+
 - Correct data
 ```js
 {
@@ -94,6 +96,7 @@ Before development, you need to understand the overall directory structure of th
 }
 ```
 ##### 2.How to Ensure the Accuracy of Error Codes and Error Information
+
 - The Egg interface is normal. The HTTP status code is 200 except that the service layer returns 403 for re-login. The exception cause is error.
 - Entry internationalization: The corresponding error code and entry content are continuously added to the config/locale file.
 - Do not request the data-center interface and directly invoke helper.commonJson() to return data.
@@ -107,23 +110,83 @@ const createRes = await platforms.createPlatform(body);
 this.ctx.body = this.ctx.helper.formatResponse(createRes, 'name');
 ```
 ##### 3.Parameter field validation
+
 - Use validate to verify the field necessity and format at the egg service layer interface to prevent this error from being thrown in the strapi. If there are special requirements on the data format, add rules in app/validate.
 
 ##### 4.error-handling middleware
+
 - Add error interception processing to the middleware errorResponse.ts. Exceptions caused by the server will be captured and 500 will be returned. Exceptions thrown by other middleware will be added based on the error content.
+
+### Instruction Manual
+
+For specific server usage documentation, please see [TinyEngine Official Website - User Manual](https://opentiny.design/tiny-engine#/help-center/course/backend/51)
+
 ### development
-Dependencies required for installation
+
+#### Environment Variables
+
+|Variable name|Description
+|---|---|
+|GIT_USERNAME|Code repository user name with push code permission when the application is published|
+|GIT_EMAIL|The email address of the user who has push code permissions in the code repository when the application is published|
+|GIT_USER_TOKEN|Code repository token with push code permission when the application is published|
+|GIT_REPO|Code repository address when the application is released|
+|GIT_BRANCH|The branch where the code is submitted by default when the application is released|
+|DATA_CENTER_URL|Data center address, for example:https://www.mydatacenter.com|
+|PROXY_SERVER|Selective setting.  If your server requires proxy services to access external data, you need to configure the address of the proxy service|
+|OPENAI_API_KEY|API key for openai AI interface|
+|WENXIN_ ACCESS_ TOKEN | Access to the AI interface ERNIE Bot_ token (updated every 30 days)|
+|NPM_AUTH_TOKEN|The authToken of npmjs.com users with publish permission, which is used to publish blocks|
+
+The following are the configuration items for reference environment variables:
+obs configuration
+This open source code provides usage examples for pairing with Huawei Cloud OBS:
+
+|Variable name|Description
+|---|---|
+|OBS_AK|obs AK This sample code uses Huawei Cloud obs. If you use other cloud service products, please search for relevant code modification logic to adapt it.
+|OBS_SK|obs SK This sample code uses Huawei Cloud obs. If you use other cloud service products, please search for relevant code modification logic to adapt it.
+|OBS_ACCESS_URL|obs resource access url, for example:https://tinyengine.obs.cn-north-4.myhuaweicloud.com/somepath/somefile.tar.gz|
+|OBS_SERVICE_URL|The obs service link parameter passed in when using the obs sdk, for example:https://obs.cn-north-4.myhuaweicloud.com|
+
+RabbitMQ configuration
+
+This open source code provides an example of using RabbitMQ to connect to a task queue (the RabbitMQ plugin in the open source code is turned off. If necessary, please turn it on. Also restore the commented code in app.ts in the project root directory):
+
+|Variable name|Description
+|---|---|
+|MQ_IP| The IP address of the task queue service|
+|MQ_PORT|The task queue service port, for example, 5671|
+|MQ_USERNAME|Task queue service user name|
+|MQ_PASSWORD|	Task queue service password|
+
+If CI/CD deployment or containerized deployment of your own service is involved, please configure environment variables according to the characteristics of your own product and tool based on the above list;
+
+#### Local Runtime Configuration Method:
+
+git-bash or bash
+```
+vi ~/.bashrc
+```
+```
+export MQ_IP=192.168.0.11
+export MQ_PORT=5671
+# Wait for environment variables
+```
+After setting, reopen the command line or execute it in the current command line
+```
+source ~/.bashrc
+```
+Make the set environment variables take effect;(The environment variables set in git bash cannot be applied to powershell and cmd)
+Start project
+nodejs version selection: >= 16
+Go to the root directory of the project and execute it once:
 
 ```
-$ npm install
+yarn install --ignore-engines
+npm run dev
 ```
-Local development configuration
-*https://opentiny.design/tiny-engine#/help -center/course/backend/51
 
-Start a project
-```
-$ npm run dev
-```
 ### Milestones
 
 ```mermaid
