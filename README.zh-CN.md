@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<p align="center">TinyEngine低代码引擎能使开发者定制低代码平台，支持在线实时构建低码平台，支持二次开发或集成低码平台能力</p>
+<p align="center">tiny-engine-webservice是一个restful API，负责向前端提供数据服务、代码生成服务和代码发布服务。它不直接在数据库上操作，数据操作请求tiny-engine数据中心的接口</p>
 
 [English](README.md) | 简体中文
 
@@ -110,19 +110,73 @@
 - 在egg服务层接口使用validate进行字段必要性和格式校验，避免这种错误在strapi抛出，对数据格式有特殊要求的可以在app/validate添加规则
 
 ##### 4.错误处理中间件
-- 在中间件errorResponse.ts中补充错误拦截处理；服务端本身导致的异常会捕获并返回500, 其他中间件等抛出的异常根据错误内容添加
+- 在中间件errorResponse.ts中补充错误拦截处理；服务端本身导致的异常会捕获并返回500, 
+
+### 使用手册
+具体服务端使用文档请查看[TinyEngine 官网-使用手册](https://opentiny.design/tiny-engine#/help-center/course/backend/51)
+
 ### 开发
-安装所需的依赖
+#### 环境变量
+|变量名称|说明
+|---|---|
+|GIT_USERNAME|应用发布时具备push代码权限的代码仓用户名|
+|GIT_EMAIL|应用发布时具备push代码权限的代码仓的用户邮箱|
+|GIT_USER_TOKEN|应用发布时具备push代码权限的代码仓token|
+|GIT_REPO|应用发布时的代码仓地址|
+|GIT_BRANCH|应用发布时默认提交代码的分支|
+|DATA_CENTER_URL|数据中心地址，例如： https://www.mydatacenter.com|
+|PROXY_SERVER|选择性设置，如果自己的服务器需要代理服务才能访问外部数据，需要配置代理服务的地址|
+|OPENAI_API_KEY|AI接口 openai的 API key|
+|WENXIN_ACCESS_TOKEN|AI接口 文心一言的access_token (30天一更新)|
+|NPM_AUTH_TOKEN|npmjs.com 的用户具备publish权限的authToken, 用户发布区块|
+以下为参考环境变量配置项：
+
+obs 配置
+此次开源代码提供了搭配华为云obs的使用示例：
+
+|变量名称|说明
+|---|---|
+|OBS_AK|obs AK 本示例代码使用华为云obs，如果使用其他云服务产品请搜索相关代码修改逻辑适配|
+|OBS_SK|obs SK 本示例代码使用华为云obs，如果使用其他云服务产品请搜索相关代码修改逻辑适配|
+|OBS_ACCESS_URL|obs的资源访问url，例如：https://tinyengine.obs.cn-north-4.myhuaweicloud.com/somepath/somefile.tar.gz|
+|OBS_SERVICE_URL|使用obs sdk时传入的obs服务链接参数，例如：https://obs.cn-north-4.myhuaweicloud.com|
+
+RabbitMQ 配置
+此次开源代码提供了连接RabbitMQ任务队列的使用示例（开源代码中RabbitMQ 插件处于关闭状态，如果需要请开启。 同时恢复项目根目录下app.ts中被注释的代码）：
+
+|变量名称|说明
+|---|---|
+|MQ_IP|	任务队列服务ip地址|
+|MQ_PORT|	任务队列服务端口，例如 5671|
+|MQ_USERNAME|	任务队列服务用户名|
+|MQ_PASSWORD|	任务队列服务密码|
+
+如果涉及到自身服务的CI/CD 部署 或容器化部署请根据自身所属产品、工具的特点按照上面的清单配置环境变量；
+#### 本地运行时配置方式：
+
+git-bash 或 bash
+```
+vi ~/.bashrc
+```
 
 ```
-$ npm install
+export MQ_IP=192.168.0.11
+export MQ_PORT=5671
+# 等等环境变量
 ```
-本地开发配置
-* https://opentiny.design/tiny-engine#/help-center/course/backend/51
-
+设置完后，重新打开命令行或则在当前命令行执行
+```
+source ~/.bashrc
+```
+让设置的环境变量生效；(git bash中设置的环境变量无法适用于powershell 和cmd)
 启动项目
+
+nodejs版本选择： >= 16
+
+进入到项目根目录下，一次执行：
 ```
-$ npm run dev
+yarn install --ignore-engines
+npm run dev
 ```
 ### 里程碑
 ```mermaid
