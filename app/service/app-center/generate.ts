@@ -118,7 +118,7 @@ class Generate extends DataServcice {
       dataSource: { dataHandler, list: originList }
     } = this.schema;
     const fileName = 'dataSource.json';
-    const filepath = path.resolve(this.generatePath, 'src', fileName);
+    const filepath = path.resolve(this.generatePath, 'src/lowcode', fileName);
 
     const list = originList.map(({ id, name, data }) => ({ id, name, ...data }));
     const code = { dataHandler, list };
@@ -133,7 +133,7 @@ class Generate extends DataServcice {
     if (utils?.length) {
       const utilStr = this.generateExport(utils);
       const fileName = 'utils.js';
-      const filepath = path.resolve(this.generatePath, 'src', fileName);
+      const filepath = path.resolve(this.generatePath, 'src/lowcode', fileName);
       const content = this.formatCode(utilStr, { ...prettierCommon, parser: 'typescript' }, fileName);
 
       return this.saveCode(content, filepath, fileName);

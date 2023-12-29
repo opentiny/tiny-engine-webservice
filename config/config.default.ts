@@ -85,22 +85,22 @@ export default (appInfo) => {
 
   config.previewTemplate = {
     default: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     },
     common: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     },
     bigScreen: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     },
     priceCalculator: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     },
     mobile: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     },
     taihu: {
-      vue: '@opentiny/tiny-engine-generate-preview'
+      vue: '@opentiny/tiny-engine-preview-vue'
     }
   };
 

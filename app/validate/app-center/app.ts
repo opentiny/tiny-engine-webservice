@@ -55,7 +55,7 @@ export const updateAppRule = {
 
 export const publishAppRule = {
   id: 'id',
-  commitMsg: 'commit',
+  commitMsg: 'string',
   branch: 'string',
   canCreateNewBranch: 'boolean',
   allGenerate: 'boolean'
