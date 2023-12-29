@@ -12,7 +12,7 @@
 import { Controller } from 'egg';
 import { I_Response } from '../../lib/interface';
 import { E_CanvasEditorState, E_ErrorCode,  } from '../../lib/enum';
-import { publishAppRule } from '../../validate/app-center/app';
+import { publishAppRule, updateAppRule } from '../../validate/app-center/app';
 
 const i18nRule = {
   id: {
@@ -35,6 +35,31 @@ class AppsController extends Controller {
     this.ctx.validate({ id: 'id' }, { id });
     const { apps } = this.ctx.service.appCenter;
     this.ctx.body = await apps.getAppById(id);
+  }
+
+  /**
+   * @router get /api/apps/update/:id  路径
+   * @summary 应用修改
+   * @description 修改应用
+   */
+  async update() {
+    const { id } = this.ctx.params;
+    const { body } = this.ctx.request;
+    const updateParam = this.ctx.helper.pickObject({ id, ...body }, [
+      'platform',
+      'obs_url',
+      'created_at',
+      'updated_at',
+      'createdBy',
+      'updatedBy',
+      'tenant',
+      'platform_history',
+      'framework',
+      'data_hash'
+    ], false)
+    const { apps } = this.ctx.service.appCenter;
+    this.ctx.validate(updateAppRule, updateParam);
+    this.ctx.body = await apps.updateApp(updateParam);
   }
 
 

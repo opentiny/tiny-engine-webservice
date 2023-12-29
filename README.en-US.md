@@ -117,10 +117,8 @@ Dependencies required for installation
 ```
 $ npm install
 ```
-Modifying the Local Development Configuration File
-* In the config.local.ts file in the config folder of the tiny-engine-webservice root directory, modify the config.dataCenter configuration to the database service configuration.
-* In the config.default.ts file in the config folder of the tiny-engine-webservice root directory, modify the OBS configuration to the cloud storage service configuration and modify the config.amqplib configuration to the MQ service configuration. (You do not need to delete the related configuration and code.) Modify config.aiChat to your own AI big model service configuration.
-
+Local development configuration
+*https://opentiny.design/tiny-engine#/help -center/course/backend/51
 Start a project
 ```
 $ npm run dev

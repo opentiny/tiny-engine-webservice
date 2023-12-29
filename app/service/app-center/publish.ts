@@ -35,9 +35,9 @@ class PublishApp extends DataServcice {
 
   private getUserInfo(): { username: string; email: string; userToken: string } {
     return {
-      username: this.ctx.session.user?.uid,
-      email: this.ctx.session.user?.email,
-      userToken: this.bodyParam?.gitUserToken || ''
+      username: this.config.userName,
+      email: this.config.email,
+      userToken: this.config.userToken || ''
     };
   }
 
@@ -46,9 +46,8 @@ class PublishApp extends DataServcice {
 
     try {
       await generate.init(appId);
-
-      const appInfo = await this.service.appCenter.apps.getAppById(Number(appId));
-      const { project_name, branch } = appInfo.data || {};
+      const project_name = this.config.projectName;
+      const branch = this.config.gitBranch;
       const git_branch = this.bodyParam.branch || branch;
       const canCreateNewBranch = this.bodyParam.canCreateNewBranch || false;
 

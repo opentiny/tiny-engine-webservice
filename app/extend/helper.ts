@@ -10,6 +10,7 @@
 *
 */
 import { Context } from 'egg';
+import spawn from "cross-spawn"
 import { I_ErrorData, I_Response, I_DataUnnecessary } from '../lib/interface';
 import { I_UpdateAppParam } from '../interface/app-center/app';
 import { E_ErrorCode, E_MaterialErrorCode } from '../lib/enum';
@@ -231,5 +232,44 @@ module.exports = {
       }
     });
     return result;
-  }
+  },
+
+  async execCommand (command,options) {
+    const [cmd, ...params] = command.split(' ')
+    return new Promise((resolve, reject) => {
+      const task = spawn(cmd, params, { ...options })
+      let stderr = ''
+      task.on('close', (code) => {
+        if (code === 0) {
+          return resolve(`succeed exec command: ${command}`)
+        }
+        return reject(new Error(stderr.trim()))
+      })
+      task.on('error', reject)
+      task.stderr?.on('data', (chunk) => {
+        stderr += chunk.toString()
+      })
+      task.stdout?.pipe(process.stdout)
+      task.stderr?.pipe(process.stderr)
+    })
+  },
+
+  async execCommandWithCatch (commands,options,messagePrefix) {
+    try {
+      for(const command of commands ){
+        await this.ctx.helper.execCommand(command, options)
+      }
+      return {
+        isSuccess: true,
+        message: `${messagePrefix}: success`
+      }
+    } catch (error: any) {
+      const message = `${messagePrefix} error: ${error.message || error}`
+      return {
+        isSuccess: false,
+        message: message
+      }
+    }
+  },
+
 };

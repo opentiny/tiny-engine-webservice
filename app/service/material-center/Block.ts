@@ -12,9 +12,8 @@
 import * as fs from 'fs-extra';
 import * as qs from 'querystring';
 import DataService from '../dataService';
-import { E_ErrorCode, E_i18Belongs, E_MaterialErrorCode, E_Method } from '../../lib/enum';
+import { E_i18Belongs, E_Method } from '../../lib/enum';
 import { I_Response } from '../../lib/interface';
-import { ApiError } from '../../lib/ApiError';
 import { I_CreateBlock, I_UpdateBlock } from '../../interface/material-center/block';
 
 export default class BlockService extends DataService {
@@ -54,17 +53,10 @@ export default class BlockService extends DataService {
     });
   }
   async delete({ id }) {
-    const materials: I_Response = await this.query({
-      url: `${this.base}/${id}/materials`
+    return this.query({
+      url: `${this.base}/${id}`,
+      method: E_Method.Delete
     });
-    if (materials.data?.count > 0) {
-      throw new ApiError('', E_ErrorCode.BadRequest, E_MaterialErrorCode.CM203);
-    } else {
-      return this.query({
-        url: `${this.base}/${id}`,
-        method: E_Method.Delete
-      });
-    }
   }
 
   getBlocks(param) {
