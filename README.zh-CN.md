@@ -129,6 +129,7 @@
 |OPENAI_API_KEY|AI接口 openai的 API key|
 |WENXIN_ACCESS_TOKEN|AI接口 文心一言的access_token (30天一更新)|
 |NPM_AUTH_TOKEN|npmjs.com 的用户具备publish权限的authToken, 用户发布区块|
+
 以下为参考环境变量配置项：
 
 obs 配置
