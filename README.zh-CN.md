@@ -117,9 +117,8 @@
 ```
 $ npm install
 ```
-本地开发配置文件修改
-* tiny-engine-webservice 根目录config文件夹下config.local.ts 文件中，修改config.dataCenter配置为自己数据库服务配置
-* tiny-engine-webservice 根目录config文件夹下config.default.ts 文件中 修改相关obs配置为自己的云存储服务配置，修改config.amqplib为自己的mq服务配置（不用可删除相关配置及代码），修改config.aiChat为自己的ai大模型服务配置
+本地开发配置
+* https://opentiny.design/tiny-engine#/help-center/course/backend/51
 
 启动项目
 ```

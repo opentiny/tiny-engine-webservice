@@ -35,9 +35,9 @@ class PublishApp extends DataServcice {
 
   private getUserInfo(): { username: string; email: string; userToken: string } {
     return {
-      username: this.ctx.session.user?.uid,
-      email: this.ctx.session.user?.email,
-      userToken: this.bodyParam?.gitUserToken || ''
+      username: this.config.userName,
+      email: this.config.email,
+      userToken: this.config.userToken || ''
     };
   }
 

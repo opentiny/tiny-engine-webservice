@@ -287,6 +287,9 @@ export default (appInfo) => {
   config.registry = 'registry.npmjs.org/';
   config.projectName = process.env.GIT_REPO;     // 应用发布git仓库地址
   config.gitBranch = process.env.GIT_BRANCH;     // 应用发布git代码默认提交分支
+  config.userName = process.env.GIT_USERNAME;
+  config.userToken = process.env.GIT_USER_TOKEN;
+  config.email = process.env.GIT_EMAIL;
 
   return config;
 };
