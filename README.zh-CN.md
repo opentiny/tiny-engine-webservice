@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<p align="center">TinyEngine Web Service是一个RESTful API，负责向前端提供数据服务、代码生成服务和代码发布服务。它不直接在数据库上操作，数据操作请求TinyEngine Data Center 数据中心的接口</p>
+<p align="center">Tiny Engine Web Service是一个RESTful API，负责向前端提供数据服务、代码生成服务和代码发布服务。它不直接在数据库上操作，数据操作请求TinyEngine Data Center 数据中心的接口</p>
 
 [English](README.md) | 简体中文
 
