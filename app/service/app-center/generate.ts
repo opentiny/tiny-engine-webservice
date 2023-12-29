@@ -24,7 +24,8 @@ const WORDS = {
   saveCode: 'save the code locally',
   generateCode: 'Generate app preview code',
   dslParse: 'dsl parsing',
-  generateDependencies: 'generate dependencies'
+  generateDependencies: 'generate dependencies',
+  generateGlobalState: 'generate global state'
 };
 
 const COMPONENT_NAME = {
@@ -77,7 +78,8 @@ class Generate extends DataServcice {
       this.generateBlock(),
       this.generateUtils(),
       this.generateRouter(),
-      this.generateDependencies()
+      this.generateDependencies(),
+      this.generateGlobalState()
     ];
 
     // 执行生成代码任务，任何一个 reject 立即结束，并抛出错误，由调用方 catch
@@ -116,7 +118,7 @@ class Generate extends DataServcice {
       dataSource: { dataHandler, list: originList }
     } = this.schema;
     const fileName = 'dataSource.json';
-    const filepath = path.resolve(this.generatePath, 'src', fileName);
+    const filepath = path.resolve(this.generatePath, 'src/lowcode', fileName);
 
     const list = originList.map(({ id, name, data }) => ({ id, name, ...data }));
     const code = { dataHandler, list };
@@ -131,7 +133,7 @@ class Generate extends DataServcice {
     if (utils?.length) {
       const utilStr = this.generateExport(utils);
       const fileName = 'utils.js';
-      const filepath = path.resolve(this.generatePath, 'src', fileName);
+      const filepath = path.resolve(this.generatePath, 'src/lowcode', fileName);
       const content = this.formatCode(utilStr, { ...prettierCommon, parser: 'typescript' }, fileName);
 
       return this.saveCode(content, filepath, fileName);
@@ -602,6 +604,85 @@ export default createRouter({
 
       throw new Error(message);
     }
+  }
+
+  private async generateGlobalState () {
+    const { global_state } = this.schema.meta;
+    let globalState: {
+      actions?: {
+        [key:string]: {
+          type: string;
+          value: string
+        }
+      };
+      getters?: {
+        [key:string]: {
+          type: string;
+          value: string;
+        }
+      };
+      id: string;
+      state: { [key:string]: any }
+    }[] = []
+
+    if (Array.isArray(global_state)) {
+      globalState = [...global_state]
+    }
+
+    const baseDir = `${this.generatePath}/src/stores`
+    // write global state
+    const res:any = []
+    const ids:any[] = []
+
+    const getStoreFnStrs = (getters: Record<string, { type?: string; value?: string }> = {}) =>
+      Object.values(getters)
+        .map(({ value }) => value?.replace(/function /, ''))
+        .join(',\n');
+
+    for (const stateItem of globalState) {
+      let importStatement = "import { defineStore } from 'pinia'"
+      const { id, state, getters, actions } = stateItem
+
+      ids.push(id)
+
+      const storeFiles = `
+        ${importStatement}
+        export const ${id} = defineStore({
+          id: '${id}',
+          state: () => (${JSON.stringify(state)}),
+          getters: {
+            ${getStoreFnStrs(getters)}
+          },
+          actions: {
+            ${getStoreFnStrs(actions)}
+          }
+        })
+      `
+      const fileName = `${id}.js`
+      
+      res.push({
+        fileName,
+        fileContent: this.formatCode(storeFiles, { ...prettierCommon, parser: 'typescript' }, fileName)
+      })
+    }
+
+    res.push({
+      fileName: 'index.js',
+      fileContent: ids.map((item) => `export { ${item} } from './${item}'`).join('\n')
+    })
+
+    try {
+      for (const { fileName, fileContent } of res) {
+        await this.saveCode(fileContent, path.resolve(baseDir, fileName))
+      }
+
+    } catch (error) {
+      const message = `failed to ${WORDS.generateGlobalState}: ${this.getMessage(error)}`;
+      this.logger.error(message);
+
+      throw new Error(message);
+    }
+
   }
 }
 
