@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<p align="center">tiny-engine-webservice是一个restful API，负责向前端提供数据服务、代码生成服务和代码发布服务。它不直接在数据库上操作，数据操作请求tiny-engine数据中心的接口</p>
+<p align="center">TinyEngine Web Service是一个RESTful API，负责向前端提供数据服务、代码生成服务和代码发布服务。它不直接在数据库上操作，数据操作请求TinyEngine Data Center 数据中心的接口</p>
 
 [English](README.md) | 简体中文
 
@@ -70,7 +70,9 @@
 
 
 ### 接口返回规范
+
 ##### 1.返回格式
+
 - 正常数据
 ```js
 {
@@ -94,6 +96,7 @@
 }
 ```
 ##### 2.如何保证错误码和错误信息准确性
+
 - egg接口走通，除业务层返回403重登录外，http状态码均为200，异常原因体现在error；
 - 词条国际化：在config/locale 中持续补充对应错误码和词条内容
 - 不请求data-center的接口，直接调用helper.commonJson()返回数据
@@ -107,16 +110,21 @@
     this.ctx.body = this.ctx.helper.formatResponse(createRes, 'name');
 ```
 ##### 3.参数字段校验
+
 - 在egg服务层接口使用validate进行字段必要性和格式校验，避免这种错误在strapi抛出，对数据格式有特殊要求的可以在app/validate添加规则
 
 ##### 4.错误处理中间件
+
 - 在中间件errorResponse.ts中补充错误拦截处理；服务端本身导致的异常会捕获并返回500, 
 
 ### 使用手册
+
 具体服务端使用文档请查看[TinyEngine 官网-使用手册](https://opentiny.design/tiny-engine#/help-center/course/backend/51)
 
 ### 开发
+
 #### 环境变量
+
 |变量名称|说明
 |---|---|
 |GIT_USERNAME|应用发布时具备push代码权限的代码仓用户名|
@@ -153,6 +161,7 @@ RabbitMQ 配置
 |MQ_PASSWORD|	任务队列服务密码|
 
 如果涉及到自身服务的CI/CD 部署 或容器化部署请根据自身所属产品、工具的特点按照上面的清单配置环境变量；
+
 #### 本地运行时配置方式：
 
 git-bash 或 bash
@@ -179,7 +188,9 @@ nodejs版本选择： >= 16
 yarn install --ignore-engines
 npm run dev
 ```
+
 ### 里程碑
+
 ```mermaid
 gantt 
 dateFormat YYYY-MM-DD

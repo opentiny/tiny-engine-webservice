@@ -3,7 +3,7 @@
     <img alt="OpenTiny Logo" src="logo.svg" height="100" style="max-width:100%;">
   </a>
 </p>
-<p align="center">tiny-engine-webservice is a restful API responsible for providing data services, code generation services, and code release services to the front end.  It does not directly operate on the database, and data operations request interfaces from tiny-engine-data-center.</p>
+<p align="center">TinyEngine Web Service is a RESTful API responsible for providing data services, code generation services, and code release services to the front end.  It does not directly operate on the database, and data operations request interfaces from TinyEngine Data Center.</p>
 
 
 English | [简体中文](README.zh-CN.md)
@@ -70,7 +70,9 @@ Before development, you need to understand the overall directory structure of th
 
 
 ### Interface Return Specifications
+
 ##### 1.Return Format
+
 - Correct data
 ```js
 {
@@ -94,6 +96,7 @@ Before development, you need to understand the overall directory structure of th
 }
 ```
 ##### 2.How to Ensure the Accuracy of Error Codes and Error Information
+
 - The Egg interface is normal. The HTTP status code is 200 except that the service layer returns 403 for re-login. The exception cause is error.
 - Entry internationalization: The corresponding error code and entry content are continuously added to the config/locale file.
 - Do not request the data-center interface and directly invoke helper.commonJson() to return data.
@@ -107,16 +110,21 @@ const createRes = await platforms.createPlatform(body);
 this.ctx.body = this.ctx.helper.formatResponse(createRes, 'name');
 ```
 ##### 3.Parameter field validation
+
 - Use validate to verify the field necessity and format at the egg service layer interface to prevent this error from being thrown in the strapi. If there are special requirements on the data format, add rules in app/validate.
 
 ##### 4.error-handling middleware
+
 - Add error interception processing to the middleware errorResponse.ts. Exceptions caused by the server will be captured and 500 will be returned. Exceptions thrown by other middleware will be added based on the error content.
 
 ### Instruction Manual
+
 For specific server usage documentation, please see [TinyEngine Official Website - User Manual](https://opentiny.design/tiny-engine#/help-center/course/backend/51)
 
 ### development
+
 #### Environment Variables
+
 |Variable name|Description
 |---|---|
 |GIT_USERNAME|Code repository user name with push code permission when the application is published|
