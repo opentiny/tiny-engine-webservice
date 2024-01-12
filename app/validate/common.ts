@@ -127,4 +127,10 @@ export default (app) => {
     }
   });
 
+  validator.addRule('pageParentId', (rule, value) => {
+    if (typeof (value) !== 'number' && !/^[0-9]+$/.test(value)) {
+      return `不是一个合法的${rule.type}格式`;
+    }
+  });
+
 };

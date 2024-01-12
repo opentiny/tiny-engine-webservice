@@ -29,9 +29,9 @@ export const schema2codeRuleV1 = {
         type: 'object',
         required: true,
         rule: {
-           schema: 'object',
-           id: 'id',
-           name: 'string' 
+            schema: 'object',
+            id: 'id',
+            name: 'string'
         }
     }
 };
@@ -44,13 +44,13 @@ export const createPageRule = {
     isPage: 'boolean',
     message: 'string',
     name: 'string',
-    parentId: 'string',
+    parentId: 'pageParentId',
     route: 'string',
     page_content: 'object'
 };
 
 export const createFolderRule = {
-    parentId: 'string',
+    parentId: 'pageParentId',
     route: 'string',
     name: 'string',
     app: 'id',
@@ -70,13 +70,13 @@ export const updatePageRule = {
     message: 'string?',
     name: 'string?',
     parentId: {
-        type: 'string',
+        type: 'pageParentId',
         required: false
     },
     route: 'string?',
     page_content: {
         type: 'object',
-        rule: { componentName: ['Page'] }, 
+        rule: { componentName: ['Page'] },
         required: false
     }
 };
@@ -85,7 +85,7 @@ export const updateFolderRule = {
     id: 'id',
     name: 'string?',
     parentId: {
-        type: 'string',
+        type: 'pageParentId',
         required: false
     },
     route: 'string?',
