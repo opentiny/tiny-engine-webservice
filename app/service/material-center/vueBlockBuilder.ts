@@ -123,7 +123,7 @@ export default class VueBlockBuilder extends Service{
   // 获取tgz路径
   async findTgz(dir) {
     const fileList = await fs.readdir(dir)
-    return fileList.find((file) => /^opentiny-tiny-engine-block-build-*.*\.tgz$/.test(file)) || '' //TODO 这里匹配的是包tgz文件的名称，择机替换为opentiny的
+    return fileList.find((file) => /^opentiny-tiny-engine-block-build-*.*\.tgz$/.test(file)) || '' //这里匹配的是包tgz文件的名称
   }
 
   // 执行命令
