@@ -13,7 +13,7 @@ import { AstNodeSchema, ChildrenSchema, TransformOption } from '../lib/types';
 import NodeFactory from './templateParser/nodeFactory';
 
 /**
- *  TODO List
+ *  List
  *  1.解析插值，例如<li v-for="student in students" :key="student.id">{{ student.name }} - {{ student.age }}岁</li>
  *  2.解析v-if
  *
@@ -42,6 +42,5 @@ export default function astToSchema(currentNode: AstNodeSchema, option: Transfor
     });
   }
 
-  // TODO 考虑用尾递归优化
   return schema;
 }

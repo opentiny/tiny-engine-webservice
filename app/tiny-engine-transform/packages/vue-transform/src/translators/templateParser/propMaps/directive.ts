@@ -18,7 +18,7 @@ export default (prop: AstProp) => {
   const directiveBind = {
     [E_NodeType.SIMPLE_EXPRESSION]: {
       key: prop.arg?.content,
-      // TODO 暂不支持这种写法<div :style="{ width: quotePopWidth }">循环渲染：</div>
+      // 暂不支持这种写法<div :style="{ width: quotePopWidth }">循环渲染：</div>
       value: dealWithContent(prop),
     },
     [E_NodeType.COMPOUND_EXPRESSION]: {
@@ -47,7 +47,7 @@ export default (prop: AstProp) => {
         value: `state.${prop.exp?.loc.source}`,
       };
     } else {
-      // TODO 字面量中内嵌复合表达式暂不支持
+      // 字面量中内嵌复合表达式暂不支持
       return prop.exp?.content;
     }
   }
@@ -55,7 +55,7 @@ export default (prop: AstProp) => {
   return {
     bind: directiveBind[prop.exp?.type],
 
-    // TODO 暂不支持v-on的内联声明
+    // 暂不支持v-on的内联声明
     on: {
       key: 'on' + toPascalCase(prop.arg?.content),
       value: {

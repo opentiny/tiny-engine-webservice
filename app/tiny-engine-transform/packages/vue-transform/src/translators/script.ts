@@ -90,7 +90,6 @@ class VueScriptTranslator {
     if (argumentType === E_Expression.ObjectExpression) {
       this.pageSchema.state = this.getValueFromObjectExpression(returnStatement.argument);
     }
-    // TODO 处理computed
   }
 
   getProp() {}

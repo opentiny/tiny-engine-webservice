@@ -30,7 +30,7 @@ export default class IfNode extends AstNode {
   constructor(current: AstNodeSchema, sourceLib: string, targetLib: string) {
     super(current);
 
-    // 根据ast结构，条件语句节点的部分数据直接从有且仅有一个（TODO 当前不支持多分支条件语句）的分支节点获取
+    // 根据ast结构，条件语句节点的部分数据直接从有且仅有一个（当前不支持多分支条件语句）的分支节点获取
     const child = current.branches[0] ?? {};
     this.condition = child.condition;
     this.componentName = child.children[0].tag;
@@ -64,7 +64,7 @@ export default class IfNode extends AstNode {
     const libRules: Record<string, Rule> = rules[this.targetLib][this.sourceLib];
     const rule: Rule = libRules[this.componentName];
 
-    // TODO 暂时不能区分自定义组件和组件库组件
+    // 暂时不能区分自定义组件和组件库组件
     if (this.tagType === E_ElementTypes.COMPONENT && rule) {
       return rule.componentName;
     }

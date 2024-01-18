@@ -9,11 +9,11 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-import * as path from 'path'
-import fs from 'fs-extra'
 import { Service } from 'egg';
-import { E_TASK_STATUS } from '../../lib/enum'
-import {glob} from 'glob'
+import fs from 'fs-extra';
+import { glob } from 'glob';
+import * as path from 'path';
+import { E_TASK_STATUS } from '../../lib/enum';
 export default class BlockBuilder extends Service{
   unpkgBaseUrl = 'https://npm.onmicrosoft.cn'
   pkgName
@@ -301,7 +301,7 @@ export default class BlockBuilder extends Service{
     let { label, id } = blockInfo
     label = label.replace(/\W|_/g, '').toLocaleLowerCase() || 'default'
     const env = 'alpha' || 'dev'
-    const name = `@opentiny-assets/tinyengine-${env}-block-${label}-${id}` // TODO 发包的名称看情况更改
+    const name = `@opentiny-assets/tinyengine-${env}-block-${label}-${id}` // 发包的名称根据自己情况更改
     this.pkgName = name
     return {
       name,

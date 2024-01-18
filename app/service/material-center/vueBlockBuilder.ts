@@ -9,10 +9,10 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-import * as path from 'path'
-import * as fs from 'fs-extra'
-import spawn from 'cross-spawn'
+import spawn from 'cross-spawn';
 import { Service } from 'egg';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 export default class VueBlockBuilder extends Service{
   base = this.config.buildground
   baseNpm = this.config.baseNpm
@@ -123,7 +123,7 @@ export default class VueBlockBuilder extends Service{
   // 获取tgz路径
   async findTgz(dir) {
     const fileList = await fs.readdir(dir)
-    return fileList.find((file) => /^opentiny-tiny-engine-block-build-0.*\.tgz$/.test(file)) || '' //TODO 这里匹配的是包tgz文件的名称，择机替换为opentiny的
+    return fileList.find((file) => /^opentiny-tiny-engine-block-build-*.*\.tgz$/.test(file)) || '' //这里匹配的是包tgz文件的名称
   }
 
   // 执行命令

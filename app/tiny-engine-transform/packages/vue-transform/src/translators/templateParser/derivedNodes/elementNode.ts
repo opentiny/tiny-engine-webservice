@@ -61,7 +61,7 @@ export default class ElementNode extends AstNode {
     const libRules: Record<string, Rule> = rules[this.targetLib][this.sourceLib];
     const rule: Rule = libRules[this.componentName];
 
-    // TODO 暂时不能区分自定义组件和组件库组件
+    // 暂时不能区分自定义组件和组件库组件
     if (this.tagType === E_ElementTypes.COMPONENT && rule) {
       return rule.componentName;
     }
