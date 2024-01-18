@@ -18,7 +18,6 @@ export default class BlockHistoryController extends Controller {
   }
 
   async create() {
-    // TODO 此接口并不能完成区块历史记录与区块的关联，无用接口
     const payload = this.ctx.request.body;
     if (!payload?.block) {
       this.ctx.body = this.ctx.helper.getBadRequestResponse('block should be required');

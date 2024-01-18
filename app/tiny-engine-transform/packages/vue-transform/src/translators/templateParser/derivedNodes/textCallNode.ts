@@ -28,7 +28,7 @@ export default class TextCallNode extends AstNode {
     this.node = {
       componentName: 'Text',
       props: {
-        // TODO 暂不支持“插值”插入复合表达式，国际化词条也不支持
+        // 暂不支持“插值”插入复合表达式，国际化词条也不支持
         text: this.getText(),
       },
     };
