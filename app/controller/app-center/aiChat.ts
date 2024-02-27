@@ -21,6 +21,6 @@ export default class AiChatController extends Controller {
       ctx.helper.throwError('Not passing the correct message parameter');
     }
     const model = foundationModel?.model ?? E_FOUNDATION_MODEL.GPT_35_TURBO;
-    ctx.body = await ctx.service.aiChat.getAnswerFromAi(messages, { model });
+    ctx.body = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, { model });
   }
 }
