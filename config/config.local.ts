@@ -13,10 +13,6 @@ import { EggAppConfig, PowerPartial } from 'egg';
 
 export default () => {
   const config: PowerPartial<EggAppConfig> = {};
-  config.dataCenter = {
-    host: process.env.DATA_CENTER_URL || 'http://localhost:1337',
-    sessionKeyPrefix: 'lowcode:data:'
-  };
-  
+
   return config;
 };
