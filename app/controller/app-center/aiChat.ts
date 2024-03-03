@@ -16,11 +16,13 @@ export default class AiChatController extends Controller {
   public async aiChat() {
     const { ctx } = this;
     const { foundationModel, messages } = ctx.request.body;
-    this.ctx.logger.info('ai接口请求参参数 model选型:', foundationModel);
+    //this.ctx.logger.info('ai接口请求参参数 model选型:', foundationModel);
+    //this.ctx.logger.info('messages:', messages);
     if (!messages || !Array.isArray(messages)) {
-      ctx.helper.throwError('Not passing the correct message parameter');
+      //ctx.helper.throwError('Not passing the correct message parameter');
+      return this.ctx.helper.getResponseData('Not passing the correct message parameter');
     }
     const model = foundationModel?.model ?? E_FOUNDATION_MODEL.GPT_35_TURBO;
-    ctx.body = await ctx.service.aiChat.getAnswerFromAi(messages, { model });
+    ctx.body = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, { model });
   }
 }

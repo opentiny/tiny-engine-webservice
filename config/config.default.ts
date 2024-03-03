@@ -250,7 +250,7 @@ export default (appInfo) => {
   config.aiChat = (messages = []) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
-        httpRequestUrl: 'https://api.openai.com/v1/chat/completions',
+        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {

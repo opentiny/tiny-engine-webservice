@@ -19,7 +19,7 @@ export type AiMessage = {
   content: string; // 聊天内容
 };
 
-export default class AiChatService extends Service {
+export default class AiChat extends Service {
   /**
    * 获取ai的答复
    *
@@ -53,23 +53,30 @@ export default class AiChatService extends Service {
       // 根据大模型的不同匹配不同的配置
       const aiChatConfig = this.config.aiChat(messages);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
+      console.log(httpRequestOption)
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
+      //console.log('调用AI大模型接口返回数据：',res);
     } catch (e: any) {
-      ctx.helper.throwError(`调用AI大模型接口失败: ${(e as Error).message}`, e?.status);
+      console.log(`调用AI大模型接口失败: ${(e as Error).message}`);
+      //ctx.helper.throwError(`调用AI大模型接口失败: ${(e as Error).message}`, e?.status);
+      return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
 
     if (!res) {
-      ctx.helper.throwError('调用AI大模型接口未返回正确数据');
+      //ctx.helper.throwError('调用AI大模型接口未返回正确数据');
+      return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
 
     // 适配文心一言的响应数据结构，文心的部分异常情况status也是200，需要转为400，以免前端无所适从
     if (res.data?.error_code) {
-      ctx.helper.throwError(res.data?.error_msg);
+      //ctx.helper.throwError(res.data?.error_msg);
+      return this.ctx.helper.getResponseData(res.data?.error_msg);
     }
 
     // 适配chatgpt的响应数据结构
     if (res.status !== 200) {
-      ctx.helper.throwError(res.data?.error?.message, res.status);
+      //ctx.helper.throwError(res.data?.error?.message, res.status);
+      return this.ctx.helper.getResponseData(res.data?.error?.message, res.status);
     }
 
     // 适配文心一言的响应数据结构
