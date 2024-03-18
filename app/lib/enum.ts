@@ -288,5 +288,6 @@ export enum E_Public {
 // AI大模型
 export enum E_FOUNDATION_MODEL {
   GPT_35_TURBO = 'gpt-3.5-turbo', // openai
+  Local_GPT = 'loacl-compatible-gpt-3.5', //本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。
   ERNIE_BOT_TURBO = 'ERNIE-Bot-turbo' // 文心一言
 }
