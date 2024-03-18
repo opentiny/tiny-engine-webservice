@@ -53,11 +53,11 @@ export default class AiChat extends Service {
       // 根据大模型的不同匹配不同的配置
       const aiChatConfig = this.config.aiChat(messages);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
-      console.log(httpRequestOption)
+      this.ctx.logger.debug(httpRequestOption)
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
 
     } catch (e: any) {
-      console.log(`调用AI大模型接口失败: ${(e as Error).message}`);
+      this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
 
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
