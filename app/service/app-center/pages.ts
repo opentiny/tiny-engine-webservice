@@ -30,11 +30,11 @@ class Pages extends DataService {
     const pageInfo: I_Response = await this.fQuery({
       url: `pages/${id}`
     });
-    
+
     const appSchemaMate: I_Response = await appCenter.apps.schemaMeta(pageInfo.data.app, {
       part: ['materialHistory']
     });
-    
+
     const { framework } = appSchemaMate.data.materialHistory || {};
     if (!framework) {
       throwApiError('', Number(E_ErrorCode.BadRequest), E_AppErrorCode.CM312);
@@ -132,9 +132,9 @@ class Pages extends DataService {
   }
 
   async protectDefaultPage(pageInfo: I_Response, id: number) {
-    if (pageInfo.data.isDefault){
+    if (pageInfo.data.isDefault) {
       // 查询是否是模板应用，不是的话不能删除或修改
-      const app = await this.service.appCenter.apps.findOne({id});
+      const app = await this.service.appCenter.apps.findOne({ id });
       if (!app.data?.template_type) {
         throw (new ApiError('', E_ErrorCode.BadRequest, E_AppErrorCode.CM301));
       }
@@ -196,7 +196,7 @@ class Pages extends DataService {
     const { type, id, app: appId, history } = params;
     let schema: any;
     let name = '';
-     // 如果history参数存在，则要获取对应历史记录的schema
+    // 如果history参数存在，则要获取对应历史记录的schema
     if (type === E_Schema2CodeType.BLOCK) {
       const url = history ? `block-histories/${history}` : `blocks/${id}`;
       const blockInfo: I_Response = await this.query({ url });
@@ -244,7 +244,7 @@ class Pages extends DataService {
   getPreviewMetaData(type: E_Schema2CodeType, id: number | string, app: number | string): Promise<I_Response> {
     const { appCenter, materialCenter } = this.service;
     if (type === E_Schema2CodeType.BLOCK) {
-      return materialCenter.block.getBlockPreviewMetaData(id);
+      return materialCenter.block.getBlockPreviewMetaData(id, app);
     }
     return appCenter.apps.getAppPreviewMetaData(app);
   }
@@ -286,7 +286,7 @@ class Pages extends DataService {
   */
   protected async translateSchema(params: I_TranslateSchemaParam): Promise<I_Response> {
     const { appCenter } = this.service;
-    const {schema, name, type = E_Schema2CodeType.PAGE, appId, framework: customFramework } = params;
+    const { schema, name, type = E_Schema2CodeType.PAGE, appId, framework: customFramework } = params;
     const { blockHistories = [], components = [], framework: materialFramework } = await this.getDslParamByAppId(appId);
     // 页面/区块 预览只需将页面、区块路径和区块构建产物路径统一设置为 ./components 即可
     const defaultMain = './components';
@@ -306,10 +306,10 @@ class Pages extends DataService {
     const framework = customFramework ?? materialFramework ?? E_Framework.Vue;
     const gpkg = this.app.config.dsl[E_TYPES[framework]];
     const { generateCode } = require(gpkg.dslPkgCore);
-    const code = await this.getPromiseCode(generateCode, { 
-      pageInfo: { schema, name }, 
-      blocksData:blockHistories, 
-      componentsMap 
+    const code = await this.getPromiseCode(generateCode, {
+      pageInfo: { schema, name },
+      blocksData: blockHistories,
+      componentsMap
     }).catch((e) => {
       this.logger.error('generateCode failed to execute：', e);
       throwApiError('', StatusCodes.BAD_REQUEST, E_AppErrorCode.CM313);
@@ -396,7 +396,7 @@ class Pages extends DataService {
   // 获取页面原始数据
   private getInitialPageById(id: number | string) {
     return this.query({
-      url:`pages/${id}`
+      url: `pages/${id}`
     });
   }
 

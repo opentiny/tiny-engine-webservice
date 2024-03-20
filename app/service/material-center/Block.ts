@@ -11,10 +11,10 @@
  */
 import * as fs from 'fs-extra';
 import * as qs from 'querystring';
-import DataService from '../dataService';
+import { I_CreateBlock, I_UpdateBlock } from '../../interface/material-center/block';
 import { E_i18Belongs, E_Method } from '../../lib/enum';
 import { I_Response } from '../../lib/interface';
-import { I_CreateBlock, I_UpdateBlock } from '../../interface/material-center/block';
+import DataService from '../dataService';
 
 export default class BlockService extends DataService {
   private base = 'blocks';
@@ -228,10 +228,12 @@ export default class BlockService extends DataService {
     return `${this.config.obs.url}/${Key}`;
   }
   // 获取区块预览元数据
-  async getBlockPreviewMetaData(blockId: number | string) {
+  async getBlockPreviewMetaData(blockId: number | string, app: number | string) {
     const blockInfoData: I_Response = await this.findById(blockId);
+    const appExtensions: I_Response = await this.service.appCenter.appExtensions.find(`app=${app}`);
+    const utils = appExtensions.data;
     const {
-      content: { dataSource, utils }
+      content: { dataSource }
     } = blockInfoData.data;
     const i18n = await this.getBlockI18n(blockId);
     return this.ctx.helper.getResponseData({
