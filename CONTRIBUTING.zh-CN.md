@@ -17,15 +17,15 @@
 ### 提交 Issue
 如果你在使用 TinyEngine-webservice 过程中遇到问题，欢迎给我们提交 Issue，提交 Issue 之前，请先仔细阅读相关的官方文档，确认这是一个缺陷还是尚未实现的功能。
 
-如果是一个缺陷，创建新 Issue 时选择 Bug report 模板，标题遵循缺陷简述 的格式，比如：[tiny-engine-webservice] 刷新功能无法使用。
+如果是一个缺陷，创建新 Issue 时选择 Bug report 模板，标题遵循缺陷简述 的格式，比如：[TinyEngine-webservice] 刷新功能无法使用。
 
 报告缺陷的 Issue 主要需要填写以下信息：
 
-* tiny-engine-webservice 和 node 的版本号
+* TinyEngine-webservice 和 node 的版本号
 * 缺陷的表现，可截图辅助说明，如果有报错可贴上报错信息
 * 缺陷的复现步骤，最好能提供一个最小可复现 demo 链接
 
-如果是一个新特性，则选择 Feature request 模板，标题遵循新特性简述 的格式，比如：[tiny-engine-webservice] 新增XX主题。
+如果是一个新特性，则选择 Feature request 模板，标题遵循新特性简述 的格式，比如：[TinyEngine-webservice] 新增XX主题。
 
 新特性的 Issue 主要需要填写以下信息：
 
@@ -33,21 +33,21 @@
 * 该特性的 api 是什么样的
 
 ### 提交 PR
-提交 PR 之前，请先确保你提交的内容是符合 TinyEngine-webservice 整体规划的，一般已经标记为 bug 的 Issue 是鼓励提交 PR 的，如果你不是很确定，可以创建一个 Discussion 进行讨论。
+提交 PR 之前，请先确保你提交的内容是符合 TinyEngine Web Service 整体规划的，一般已经标记为 bug 的 Issue 是鼓励提交 PR 的，如果你不是很确定，可以创建一个 Discussion 进行讨论。
 
 本地启动步骤：
 
-* 点击 TinyEngine-webservice 代码仓库右上角的 Fork 按钮，将上游仓库 Fork 到个人仓库
+* 点击 tiny-engine-webservice 代码仓库右上角的 Fork 按钮，将上游仓库 Fork 到个人仓库
 * Clone 个人仓库到本地
-* 在 TinyEngine-webservice 根目录下运行 npm install, 安装依赖
-* 在 TinyEngine-webservice 根目录config文件夹下修改相关配置
-* 在 TinyEngine-webservice 根目录下运行 npm run dev，启动本地开发
+* 在 tiny-engine-webservice 根目录下运行 npm install, 安装依赖
+* 在 tiny-engine-webservice 根目录config文件夹下修改相关配置
+* 在 tiny-engine-webservice 根目录下运行 npm run dev，启动本地开发
 
 
 ```
 # username 为用户名，执行前请替换
 git clone git@github.com:username/tiny-engine-webservice.git
-cd tiny-engine
+cd tiny-engine-webservice
 git remote add upstream git@github.com:opentiny/tiny-engine-webservice.git
 npm i
 
