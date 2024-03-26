@@ -17,15 +17,15 @@ When you personally use the TinyEngine and participate in many of the above cont
 ### Bug Reports
 If you encounter problems when using TinyEngine-webservice, please submit an issue to us. Before submitting an issue, read the related official documents carefully to check whether the issue is a defect or a function that has not been implemented.
 
-If the issue is a defect, select the bug report template when creating a new issue. The title must comply with the defect description format. For example, [tiny-engine-webservice] cannot be refreshed.
+If the issue is a defect, select the bug report template when creating a new issue. The title must comply with the defect description format. For example, [TinyEngine-webservice] cannot be refreshed.
 
 To report a defect, you need to fill in the following information:
 
-* Tiny-engine-webservice and node version numbers
+* TinyEngine-webservice and node version numbers
 *Screenshots can be used to describe the defect. If an error is reported, the error information can be posted.
 * It is recommended that a minimum demo link be provided to reproduce the defect.
 
-If the feature is a new feature, select the Feature request template. The title complies with the format of the new feature description, for example, [tiny-engine-webservice].
+If the feature is a new feature, select the Feature request template. The title complies with the format of the new feature description, for example, [TinyEngine-webservice].
 
 For an issue of a new feature, you need to fill in the following information:
 
@@ -38,16 +38,16 @@ Before submitting pull request, please make sure that your submission is in line
 
 Local startup steps:
 
-* Click Fork in the upper right corner of the TinyEngine-webservice code repository to fork the upstream repository to the personal repository.
+* Click Fork in the upper right corner of the tiny-engine-webservice code repository to fork the upstream repository to the personal repository.
 * Clone personal warehouse to local
-* Run npm install in the TinyEngine-webservice root directory to install the dependency.
-* Modify related configurations in the config folder in the TinyEngine-webservice root directory.
-* Run npm run dev in the root directory of TinyEngine-webservice to start local development.
+* Run npm install in the tiny-engine-webservice root directory to install the dependency.
+* Modify related configurations in the config folder in the tiny-engine-webservice root directory.
+* Run npm run dev in the root directory of tiny-engine-webservice to start local development.
 
 ```
 # username indicates the user name. Replace it before running the command.
 git clone git@github.com:username/tiny-engine-webservice.git
-cd tiny-engine
+cd tiny-engine-webservice
 git remote add upstream git@github.com:opentiny/tiny-engine-webservice.git
 npm i
 
