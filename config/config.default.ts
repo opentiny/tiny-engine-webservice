@@ -250,7 +250,7 @@ export default (appInfo) => {
   config.aiChat = (messages = []) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
-        httpRequestUrl: 'https://api.openai.com/v1/chat/completions',
+        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com')+'/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
@@ -262,6 +262,21 @@ export default (appInfo) => {
           },
         },
         manufacturer: 'openai',
+      },
+      ////本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。你也可以分开成多个
+      [E_FOUNDATION_MODEL.Local_GPT]: {
+        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000')+'/v1/chat/completions',
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.Local_GPT,
+            messages,
+          },
+          headers: {
+            Authorization: `Bearer ${process.env.Local_GPT_API_KEY}`,
+          },
+        },
+        manufacturer: '!openai',
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
         httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${process.env.WENXIN_ACCESS_TOKEN}`,
