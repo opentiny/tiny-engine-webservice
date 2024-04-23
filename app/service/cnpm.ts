@@ -15,12 +15,11 @@ import { Service } from 'egg';
 export default class CnpmService extends Service {
   authToken = this.config.authToken;
   registry = this.config.registry;
-  tokenRegistry = this.config.tokenRegistry
   async loginInNpm(packagePath) {
     const commands = [
       'npm config set strict-ssl false',
       `npm config set registry ${this.registry}`,
-      `npm config set //${this.tokenRegistry}:_authToken=${this.authToken}`,
+      `npm config set //${this.registry.split("//")?.[1]}:_authToken=${this.authToken}`,
       `npm whoami --registry ${this.registry}`
     ];
     return this.ctx.helper.execCommandWithCatch(commands, { cwd: packagePath }, 'login npm');
