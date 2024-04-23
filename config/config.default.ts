@@ -9,10 +9,10 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-import * as path from 'path';
 import { EggAppConfig, PowerPartial } from 'egg';
+import * as path from 'path';
+import { E_FOUNDATION_MODEL, E_SchemaFormatFunc } from '../app/lib/enum';
 import { I_SchemaConvert } from '../app/lib/interface';
-import { E_SchemaFormatFunc, E_FOUNDATION_MODEL } from '../app/lib/enum';
 
 
 export default (appInfo) => {
@@ -250,7 +250,7 @@ export default (appInfo) => {
   config.aiChat = (messages = []) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
-        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com')+'/v1/chat/completions',
+        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
@@ -265,7 +265,7 @@ export default (appInfo) => {
       },
       ////本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。你也可以分开成多个
       [E_FOUNDATION_MODEL.Local_GPT]: {
-        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000')+'/v1/chat/completions',
+        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
@@ -295,11 +295,14 @@ export default (appInfo) => {
   config.npmRegistryOptions = [
     '--registry=https://registry.npmjs.org/',
   ];
-
+  // 国内镜像
+  config.cnpmRegistryOptions = [
+    '--registry=http://registry.npmmirror.com/'
+  ];
   config.buildground = '/tmp/buildground';
   config.baseNpm = '@opentiny/tiny-engine-block-build';
   config.authToken = process.env.NPM_AUTH_TOKEN; // 替换为自己的npm token
-  config.registry = 'registry.npmjs.org/';
+  config.registry = 'https://registry.npmjs.org/'; // 如果部署了私仓可替换为自己私仓地址
   config.projectName = process.env.GIT_REPO;     // 应用发布git仓库地址
   config.gitBranch = process.env.GIT_BRANCH;     // 应用发布git代码默认提交分支
   config.userName = process.env.GIT_USERNAME;
