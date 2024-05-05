@@ -55,7 +55,7 @@
 │           └── zh-cn
 │               └── 404.tpl
 ├── config                               // 项目配置 根据不同环境会加载不同配置
-│   ├── config.default.js                // 这个文件主要是默认配置，是其他config文件定义之后根据环境不同会通过Object.assig(config.defalut.js,config.xxxx.js)方式合并。所以不同环境公共的配置全合并到这里，其他config做自己定制化处理即可。
+│   ├── config.default.js                // 这个文件主要是默认配置，是其他config文件定义之后根据环境不同会通过Object.assign(config.defalut.js,config.xxxx.js)方式合并。所以不同环境公共的配置全合并到这里，其他config做自己定制化处理即可。
 │   ├── config.local.js                  // 只需要配置本地相关的一些差异化配置
 │   ├── config.prod.js
 │   └── plugin.js                       // 插件开关目录，根据实际需要去开关自己的插件
