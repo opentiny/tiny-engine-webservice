@@ -247,7 +247,7 @@ export default (appInfo) => {
   };
 
   //ai大模型相关配置，请自行替换服务配置
-  config.aiChat = (messages = []) => {
+  config.aiChat = (messages = [], accessToken: string) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
         httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com')+'/v1/chat/completions',
@@ -279,7 +279,7 @@ export default (appInfo) => {
         manufacturer: '!openai',
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=`+accessToken,
         httpRequestOption: {
           ...commonRequestOption,
           data: {

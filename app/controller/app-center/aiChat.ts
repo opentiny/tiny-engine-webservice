@@ -13,14 +13,21 @@ import { Controller } from 'egg';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
 
 export default class AiChatController extends Controller {
+
+
+  /**
+   * @router post  /api/ai/chat  路径
+   * @summary AI大模型聊天
+   * @description 根据角色和提问信息返回AI答复
+   */
   public async aiChat() {
     const { ctx } = this;
-    const { foundationModel, messages } = ctx.request.body;
+    const { foundationModel, messages, accessToken } = ctx.request.body;
     this.ctx.logger.info('ai接口请求参参数 model选型:', foundationModel);
     if (!messages || !Array.isArray(messages)) {
       return this.ctx.helper.getResponseData('Not passing the correct message parameter');
     }
     const model = foundationModel?.model ?? E_FOUNDATION_MODEL.GPT_35_TURBO;
-    ctx.body = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, { model });
+    ctx.body = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, { model }, accessToken);
   }
 }

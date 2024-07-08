@@ -30,8 +30,8 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    const answer = await this.requestAnswerFromAi(messages, chatConfig);
+  async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any, accessToken: string) {
+    const answer = await this.requestAnswerFromAi(messages, chatConfig, accessToken);
     const answerContent = answer.choices[0]?.message.content;
     // 从ai回复中提取页面的代码
     const codes = this.extractCode(answerContent);
@@ -45,13 +45,13 @@ export default class AiChat extends Service {
     });
   }
 
-  async requestAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
+  async requestAnswerFromAi(messages: Array<AiMessage>, chatConfig: any,accessToken: string) {
     const { ctx } = this;
     this.formatMessage(messages);
     let res: any = null;
     try {
       // 根据大模型的不同匹配不同的配置
-      const aiChatConfig = this.config.aiChat(messages);
+      const aiChatConfig = this.config.aiChat(messages,accessToken);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
       this.ctx.logger.debug(httpRequestOption)
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
