@@ -1,14 +1,14 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 import * as path from 'path';
 import { EggAppConfig, PowerPartial } from 'egg';
 import { I_SchemaConvert } from '../app/lib/interface';
@@ -59,11 +59,10 @@ export default (appInfo) => {
     url: process.env.OBS_ACCESS_URL,
     serviceUrl: process.env.OBS_SERVICE_URL,
     subFolder: 'app-preview/source-code',
-    bucket: 'tiny-engine',
+    bucket: 'tiny-engine'
   };
 
   config.queueName = 'tinyengine.build.platform'; // 构建设计器 rabbitMq 队列名称
-
 
 
   config.security = {
@@ -243,57 +242,57 @@ export default (appInfo) => {
     method: 'POST',
     dataType: 'json',
     contentType: 'json',
-    timeout: 10 * 60 * 1000, // 这里与当前大模型接口的最大响应时长保持一致
+    timeout: 10 * 60 * 1000 // 这里与当前大模型接口的最大响应时长保持一致
   };
 
   //ai大模型相关配置，请自行替换服务配置
-  config.aiChat = (messages = []) => {
+  config.aiChat = (messages = [], accessToken: string) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
-        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com')+'/v1/chat/completions',
+        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
             model: E_FOUNDATION_MODEL.GPT_35_TURBO,
-            messages,
+            messages
           },
           headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          }
         },
-        manufacturer: 'openai',
+        manufacturer: 'openai'
       },
       ////本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。你也可以分开成多个
       [E_FOUNDATION_MODEL.Local_GPT]: {
-        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000')+'/v1/chat/completions',
+        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
             model: E_FOUNDATION_MODEL.Local_GPT,
-            messages,
+            messages
           },
           headers: {
-            Authorization: `Bearer ${process.env.Local_GPT_API_KEY}`,
-          },
+            Authorization: `Bearer ${process.env.Local_GPT_API_KEY}`
+          }
         },
-        manufacturer: '!openai',
+        manufacturer: '!openai'
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${accessToken || process.env.WENXIN_ACCESS_TOKEN}`,
         httpRequestOption: {
           ...commonRequestOption,
           data: {
             model: E_FOUNDATION_MODEL.ERNIE_BOT_TURBO,
-            messages,
-          },
+            messages
+          }
         },
-        manufacturer: 'baidu',
-      },
+        manufacturer: 'baidu'
+      }
     };
   };
 
   config.npmRegistryOptions = [
-    '--registry=https://registry.npmjs.org/',
+    '--registry=https://registry.npmjs.org/'
   ];
 
   config.buildground = '/tmp/buildground';
