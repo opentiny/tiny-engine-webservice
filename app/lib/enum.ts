@@ -1,14 +1,14 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 // 请求method
 export enum E_Method {
   Get = 'GET',
@@ -289,5 +289,6 @@ export enum E_Public {
 export enum E_FOUNDATION_MODEL {
   GPT_35_TURBO = 'gpt-3.5-turbo', // openai
   Local_GPT = 'loacl-compatible-gpt-3.5', //本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。
-  ERNIE_BOT_TURBO = 'ERNIE-Bot-turbo' // 文心一言
+  ERNIE_BOT_TURBO = 'ERNIE-Bot-turbo', // 文心一言
+  MOONSHOT_V1_8K = 'moonshot-v1-8k' // kimi
 }
