@@ -246,7 +246,7 @@ export default (appInfo) => {
   };
 
   //ai大模型相关配置，请自行替换服务配置
-  config.aiChat = (messages = [], accessToken: string) => {
+  config.aiChat = (messages = [], token: string) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
         httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com') + '/v1/chat/completions',
@@ -278,7 +278,7 @@ export default (appInfo) => {
         manufacturer: '!openai'
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${accessToken || process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${token || process.env.WENXIN_ACCESS_TOKEN}`,
         httpRequestOption: {
           ...commonRequestOption,
           data: {
@@ -287,6 +287,20 @@ export default (appInfo) => {
           }
         },
         manufacturer: 'baidu'
+      },
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        httpRequestUrl: `https://api.moonshot.cn/v1/chat/completions`,
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.MOONSHOT_V1_8K,
+            messages
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        },
+        manufacturer: 'kimi'
       }
     };
   };
