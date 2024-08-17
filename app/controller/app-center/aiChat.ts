@@ -23,6 +23,14 @@ export default class AiChatController extends Controller {
     const model = foundationModel?.model ?? E_FOUNDATION_MODEL.GPT_35_TURBO;
     const token = foundationModel.token;
     ctx.body = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, { model, token });
+  }
 
+
+  public async uploadFile() {
+    const { ctx } = this;
+    const fileStream = await ctx.getFileStream();
+    const foundationModelObject = JSON.parse(fileStream.fields.foundationModel);
+    const { model, token } = foundationModelObject.foundationModel;
+    ctx.body = await ctx.service.appCenter.aiChat.getFileContentFromAi(fileStream, { model, token });
   }
 }
