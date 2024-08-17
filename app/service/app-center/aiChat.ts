@@ -162,5 +162,47 @@ export default class AiChat extends Service {
     }
     return messages;
   }
+
+  /**
+   * 文件上传
+   *
+   * @param model
+   * @return
+   */
+
+  async getFileContentFromAi(fileStream: any, chatConfig: any) {
+    const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
+    return this.ctx.helper.getResponseData({
+      originalResponse: answer
+    });
+  }
+
+  async requestFileContentFromAi(file: any, chatConfig: any) {
+    const { ctx } = this;
+    let res: any = null;
+    try {
+      // 文件上传
+      const aiUploadConfig = this.config.uploadFile(file, chatConfig.token);
+      const { httpRequestUrl, httpRequestOption } = aiUploadConfig[chatConfig.model];
+      this.ctx.logger.debug(httpRequestOption);
+      res = await ctx.curl(httpRequestUrl, httpRequestOption);
+      const imageObject = JSON.parse(res.res.data.toString());
+      const fileObject = imageObject.data[0].id;
+      // 文件解析
+      const imageAnalysisConfig = this.config.parsingFile(fileObject, chatConfig.token);
+      const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
+      res = await ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption);
+      res.data = JSON.parse(res.res.data.toString());
+    } catch (e: any) {
+      this.ctx.logger.debug(`调用上传图片接口失败: ${(e as Error).message}`);
+      return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${(e as Error).message}`);
+    }
+
+    if (!res) {
+      return this.ctx.helper.getResponseData(`调用上传图片接口未返回正确数据.`);
+    }
+
+    return res.data;
+  }
 }
 
