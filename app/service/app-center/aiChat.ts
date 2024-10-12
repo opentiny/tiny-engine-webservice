@@ -1,14 +1,14 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 import { Service } from 'egg';
 import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
@@ -37,11 +37,10 @@ export default class AiChat extends Service {
     const codes = this.extractCode(answerContent);
     const schema = codes ? Transformer.translate(codes) : null;
     const replyWithoutCode = this.removeCode(answerContent);
-
     return this.ctx.helper.getResponseData({
       originalResponse: answer,
       replyWithoutCode,
-      schema,
+      schema
     });
   }
 
@@ -51,31 +50,26 @@ export default class AiChat extends Service {
     let res: any = null;
     try {
       // 根据大模型的不同匹配不同的配置
-      const aiChatConfig = this.config.aiChat(messages);
+      const aiChatConfig = this.config.aiChat(messages, chatConfig.token);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
-      this.ctx.logger.debug(httpRequestOption)
+      this.ctx.logger.debug(httpRequestOption);
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
-
     } catch (e: any) {
       this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
-
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
 
     if (!res) {
-
       return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
 
     // 适配文心一言的响应数据结构，文心的部分异常情况status也是200，需要转为400，以免前端无所适从
     if (res.data?.error_code) {
-
       return this.ctx.helper.getResponseData(res.data?.error_msg);
     }
 
     // 适配chatgpt的响应数据结构
     if (res.status !== 200) {
-
       return this.ctx.helper.getResponseData(res.data?.error?.message, res.status);
     }
 
@@ -87,10 +81,10 @@ export default class AiChat extends Service {
           {
             message: {
               role: 'assistant',
-              content: res.data.result,
-            },
-          },
-        ],
+              content: res.data.result
+            }
+          }
+        ]
       };
     }
 
@@ -157,7 +151,7 @@ export default class AiChat extends Service {
       4. 回复中只能有一个代码块
       5. 不要加任何注释
       6. el-table标签内不得出现el-table-column
-      ###`,
+      ###`
     };
     const reg = /.*\u7f16\u7801\u65f6\u9075\u4ece\u4ee5\u4e0b\u51e0\u6761\u8981\u6c42.*/;
     const { role, content } = messages[0];
