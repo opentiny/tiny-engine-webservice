@@ -67,7 +67,6 @@ export default class AiChat extends Service {
       const aiChatConfig = this.config.aiChat(messages, chatConfig.token);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
       this.ctx.logger.debug(httpRequestOption);
-
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
     } catch (e: any) {
       this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
