@@ -12,8 +12,6 @@
 import { Service } from 'egg';
 import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
-import { gzip } from 'compressing';
-import FileStream = gzip.FileStream;
 
 export type AiMessage = {
   role: string; // 角色
@@ -177,14 +175,14 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getFileContentFromAi(fileStream: FileStream, chatConfig: ConfigModel) {
+  async getFileContentFromAi(fileStream: any, chatConfig: ConfigModel) {
     const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
     return this.ctx.helper.getResponseData({
       originalResponse: answer
     });
   }
 
-  async requestFileContentFromAi(file: FileStream, chatConfig: ConfigModel) {
+  async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
     const { ctx } = this;
     let res: any = null;
     try {
