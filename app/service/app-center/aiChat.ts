@@ -12,12 +12,19 @@
 import { Service } from 'egg';
 import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
+import { gzip } from 'compressing';
+import FileStream = gzip.FileStream;
 
 export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
 };
+
+interface ConfigModel {
+  model: string,
+  token: string
+}
 
 export default class AiChat extends Service {
   /**
@@ -170,14 +177,14 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getFileContentFromAi(fileStream: any, chatConfig: any) {
+  async getFileContentFromAi(fileStream: FileStream, chatConfig: ConfigModel) {
     const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
     return this.ctx.helper.getResponseData({
       originalResponse: answer
     });
   }
 
-  async requestFileContentFromAi(file: any, chatConfig: any) {
+  async requestFileContentFromAi(file: FileStream, chatConfig: ConfigModel) {
     const { ctx } = this;
     let res: any = null;
     try {
