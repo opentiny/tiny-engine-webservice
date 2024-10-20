@@ -12,12 +12,26 @@
 import { Service } from 'egg';
 import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const OpenAI = require('openai');
+
+const client = new OpenAI({
+  apiKey: 'sk-uORejJaJs7ZXP6MFQkY9FzYhgPWZms1iOTCBUHA0ipQJRhRt',
+  baseURL: 'https://api.moonshot.cn/v1'
+});
 
 export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
 };
+
+interface ConfigModel {
+  model: string;
+  token: string;
+}
 
 export default class AiChat extends Service {
   /**
@@ -53,7 +67,7 @@ export default class AiChat extends Service {
       const aiChatConfig = this.config.aiChat(messages, chatConfig.token);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
       this.ctx.logger.debug(httpRequestOption);
-      
+
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
     } catch (e: any) {
       this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
@@ -171,32 +185,47 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getFileContentFromAi(fileStream: any, chatConfig: any) {
+  async getFileContentFromAi(fileStream: any, chatConfig: ConfigModel) {
     const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
     return this.ctx.helper.getResponseData({
       originalResponse: answer
     });
   }
 
-  async requestFileContentFromAi(file: any, chatConfig: any) {
+  async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
     const { ctx } = this;
+    // // @ts-ignore
+    const filename = Math.random().toString(36).substr(2) + new Date().getTime() + path.extname(file.filename).toLocaleLowerCase();
+    const savePath = path.join(__dirname, filename);
+    const writeStream = fs.createWriteStream(savePath);
+    file.pipe(writeStream);
+    await new Promise(resolve => writeStream.on('close', resolve));
+
     let res: any = null;
     try {
-      // 文件上传
-      const aiUploadConfig = this.config.uploadFile(file, chatConfig.token);
-      const { httpRequestUrl, httpRequestOption } = aiUploadConfig[chatConfig.model];
-      this.ctx.logger.debug(httpRequestOption);
-      res = await ctx.curl(httpRequestUrl, httpRequestOption);
-      const imageObject = JSON.parse(res.res.data.toString());
-      const fileObject = imageObject.data[0].id;
+      //上传文件
+      const fileObject = await client.files.create({
+        file: fs.createReadStream(savePath),
+        purpose: 'file-extract'
+      });
+
       // 文件解析
-      const imageAnalysisConfig = this.config.parsingFile(fileObject, chatConfig.token);
+      const imageAnalysisConfig = this.config.parsingFile(fileObject.id, chatConfig.token);
       const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
       res = await ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption);
       res.data = JSON.parse(res.res.data.toString());
+      console.log(res.data);
     } catch (e: any) {
       this.ctx.logger.debug(`调用上传图片接口失败: ${(e as Error).message}`);
       return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${(e as Error).message}`);
+    } finally {
+      // 删除本地文件
+      try {
+        await fs.promises.unlink(savePath);
+        console.log('文件已删除:', savePath);
+      } catch (err) {
+        console.error('文件删除失败:', err);
+      }
     }
 
     if (!res) {
