@@ -22,8 +22,8 @@ export type AiMessage = {
 };
 
 interface ConfigModel {
-  model: string,
-  token: string
+  model: string;
+  token: string;
 }
 
 export default class AiChat extends Service {
