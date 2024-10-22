@@ -14,7 +14,6 @@ import { EggAppConfig, PowerPartial } from 'egg';
 import { E_FOUNDATION_MODEL, E_SchemaFormatFunc } from '../app/lib/enum';
 import { I_SchemaConvert } from '../app/lib/interface';
 
-
 export default (appInfo) => {
   const config = {} as PowerPartial<EggAppConfig>;
 
@@ -301,6 +300,39 @@ export default (appInfo) => {
           }
         },
         manufacturer: 'kimi'
+      }
+    };
+  };
+
+  // 文件上传接口
+  config.uploadFile = (file: any, token: string) => {
+    return {
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        httpRequestUrl: `https://api.moonshot.cn/v1/files`,
+        httpRequestOption: {
+          data: {
+            file: file,
+            purpose: 'file-extract'
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    };
+  };
+
+  // 文件解析接口
+  config.parsingFile = (fileId: any, token: string) => {
+    return {
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        analysisImageHttpRequestUrl: `https://api.moonshot.cn/v1/files/${fileId}/content`,
+        analysisImageHttpRequestOption: {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       }
     };
   };
