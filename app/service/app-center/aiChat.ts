@@ -10,7 +10,6 @@
  *
  */
 import { Service } from 'egg';
-import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -26,6 +25,7 @@ export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
+  partial?: boolean;
 };
 
 interface ConfigModel {
@@ -45,11 +45,26 @@ export default class AiChat extends Service {
    */
 
   async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    const answer = await this.requestAnswerFromAi(messages, chatConfig);
-    const answerContent = answer.choices[0]?.message.content;
-    // 从ai回复中提取页面的代码
-    const codes = this.extractCode(answerContent);
-    const schema = codes ? Transformer.translate(codes) : null;
+    let res = await this.requestAnswerFromAi(messages, chatConfig);
+    let answerContent = '';
+    // 若内容过长被截断，继续回复
+    if (res.choices[0].finish_reason == 'length') {
+      const prefix = res.choices[0].message.content;
+      answerContent += prefix;
+      messages.push({
+        role: 'assistant',
+        content: prefix,
+        partial: true
+      });
+      res = await this.requestAnswerFromAi(messages, chatConfig);
+      answerContent += res.choices[0]?.message.content;
+    }
+    const code = this.extractCode(answerContent);
+    const schema = this.extractSchemaCode(code);
+    const answer = {
+      role: res.choices[0]?.message.role,
+      content: answerContent
+    };
     const replyWithoutCode = this.removeCode(answerContent);
     return this.ctx.helper.getResponseData({
       originalResponse: answer,
@@ -135,6 +150,20 @@ export default class AiChat extends Service {
       return content;
     }
     return content.substring(0, start) + '<代码在画布中展示>' + content.substring(end);
+  }
+
+  private extractSchemaCode(content) {
+    const startMarker = /```json/;
+    const endMarker = /```/;
+
+    const start = content.search(startMarker);
+    const end = content.slice(start + 7).search(endMarker) + start + 7;
+
+    if (start >= 0 && end >= 0) {
+      return JSON.parse(content.substring(start + 7, end).trim());
+    }
+
+    return null;
   }
 
   private getStartAndEnd(str: string) {
