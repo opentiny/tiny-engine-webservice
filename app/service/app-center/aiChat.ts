@@ -46,9 +46,16 @@ export default class AiChat extends Service {
 
   async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
     let res = await this.requestAnswerFromAi(messages, chatConfig);
+    console.log(res);
     let answerContent = '';
+    let isFinish = res.choices[0].finish_reason;
+
+    if (isFinish !== 'length') {
+      answerContent = res.choices[0]?.message.content;
+    }
+
     // 若内容过长被截断，继续回复
-    if (res.choices[0].finish_reason == 'length') {
+    while (isFinish === 'length') {
       const prefix = res.choices[0].message.content;
       answerContent += prefix;
       messages.push({
@@ -56,13 +63,16 @@ export default class AiChat extends Service {
         content: prefix,
         partial: true
       });
+
       res = await this.requestAnswerFromAi(messages, chatConfig);
-      answerContent += res.choices[0]?.message.content;
+      answerContent += res.choices[0].message.content;
+      isFinish = res.choices[0].finish_reason;
     }
+
     const code = this.extractCode(answerContent);
     const schema = this.extractSchemaCode(code);
     const answer = {
-      role: res.choices[0]?.message.role,
+      role: res.choices[0].message.role,
       content: answerContent
     };
     const replyWithoutCode = this.removeCode(answerContent);
