@@ -16,10 +16,6 @@ import * as path from 'path';
 
 const OpenAI = require('openai');
 
-const client = new OpenAI({
-  apiKey: 'sk-uORejJaJs7ZXP6MFQkY9FzYhgPWZms1iOTCBUHA0ipQJRhRt',
-  baseURL: 'https://api.moonshot.cn/v1'
-});
 
 export type AiMessage = {
   role: string; // 角色
@@ -46,7 +42,6 @@ export default class AiChat extends Service {
 
   async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
     let res = await this.requestAnswerFromAi(messages, chatConfig);
-    console.log(res);
     let answerContent = '';
     let isFinish = res.choices[0].finish_reason;
 
@@ -232,13 +227,16 @@ export default class AiChat extends Service {
 
   async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
     const { ctx } = this;
-    // // @ts-ignore
     const filename = Math.random().toString(36).substr(2) + new Date().getTime() + path.extname(file.filename).toLocaleLowerCase();
     const savePath = path.join(__dirname, filename);
     const writeStream = fs.createWriteStream(savePath);
     file.pipe(writeStream);
     await new Promise(resolve => writeStream.on('close', resolve));
 
+    const client = new OpenAI({
+      apiKey: chatConfig.token,
+      baseURL: 'https://api.moonshot.cn/v1'
+    });
     let res: any = null;
     try {
       //上传文件
@@ -252,12 +250,10 @@ export default class AiChat extends Service {
       const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
       res = await ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption);
       res.data = JSON.parse(res.res.data.toString());
-      console.log(res.data);
     } catch (e: any) {
       this.ctx.logger.debug(`调用上传图片接口失败: ${(e as Error).message}`);
       return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${(e as Error).message}`);
     } finally {
-      // 删除本地文件
       try {
         await fs.promises.unlink(savePath);
         console.log('文件已删除:', savePath);
