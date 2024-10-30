@@ -227,7 +227,7 @@ export default class AiChat extends Service {
 
   async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
     const { ctx } = this;
-    const filename = Math.random().toString(36).substr(2) + new Date().getTime() + path.extname(file.filename).toLocaleLowerCase();
+    const filename = Date.now() + path.extname(file.filename).toLowerCase();
     const savePath = path.join(__dirname, filename);
     const writeStream = fs.createWriteStream(savePath);
     file.pipe(writeStream);
