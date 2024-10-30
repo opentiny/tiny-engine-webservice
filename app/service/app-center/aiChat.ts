@@ -10,13 +10,19 @@
  *
  */
 import { Service } from 'egg';
-import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const to = require('await-to-js').default;
+const OpenAI = require('openai');
+
 
 export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
+  partial?: boolean;
 };
 
 interface ConfigModel {
@@ -36,11 +42,35 @@ export default class AiChat extends Service {
    */
 
   async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    const answer = await this.requestAnswerFromAi(messages, chatConfig);
-    const answerContent = answer.choices[0]?.message.content;
-    // 从ai回复中提取页面的代码
-    const codes = this.extractCode(answerContent);
-    const schema = codes ? Transformer.translate(codes) : null;
+    let res = await this.requestAnswerFromAi(messages, chatConfig);
+    let answerContent = '';
+    let isFinish = res.choices[0].finish_reason;
+
+    if (isFinish !== 'length') {
+      answerContent = res.choices[0]?.message.content;
+    }
+
+    // 若内容过长被截断，继续回复
+    while (isFinish === 'length') {
+      const prefix = res.choices[0].message.content;
+      answerContent += prefix;
+      messages.push({
+        role: 'assistant',
+        content: prefix,
+        partial: true
+      });
+
+      res = await this.requestAnswerFromAi(messages, chatConfig);
+      answerContent += res.choices[0].message.content;
+      isFinish = res.choices[0].finish_reason;
+    }
+
+    const code = this.extractCode(answerContent);
+    const schema = this.extractSchemaCode(code);
+    const answer = {
+      role: res.choices[0].message.role,
+      content: answerContent
+    };
     const replyWithoutCode = this.removeCode(answerContent);
     return this.ctx.helper.getResponseData({
       originalResponse: answer,
@@ -128,6 +158,20 @@ export default class AiChat extends Service {
     return content.substring(0, start) + '<代码在画布中展示>' + content.substring(end);
   }
 
+  private extractSchemaCode(content) {
+    const startMarker = /```json/;
+    const endMarker = /```/;
+
+    const start = content.search(startMarker);
+    const end = content.slice(start + 7).search(endMarker) + start + 7;
+
+    if (start >= 0 && end >= 0) {
+      return JSON.parse(content.substring(start + 7, end).trim());
+    }
+
+    return null;
+  }
+
   private getStartAndEnd(str: string) {
     const start = str.search(/```|<template>/);
 
@@ -184,30 +228,48 @@ export default class AiChat extends Service {
 
   async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
     const { ctx } = this;
-    let res: any = null;
-    try {
-      // 文件上传
-      const aiUploadConfig = this.config.uploadFile(file, chatConfig.token);
-      const { httpRequestUrl, httpRequestOption } = aiUploadConfig[chatConfig.model];
-      this.ctx.logger.debug(httpRequestOption);
-      res = await ctx.curl(httpRequestUrl, httpRequestOption);
-      const imageObject = JSON.parse(res.res.data.toString());
-      const fileObject = imageObject.data[0].id;
-      // 文件解析
-      const imageAnalysisConfig = this.config.parsingFile(fileObject, chatConfig.token);
-      const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
-      res = await ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption);
-      res.data = JSON.parse(res.res.data.toString());
-    } catch (e: any) {
-      this.ctx.logger.debug(`调用上传图片接口失败: ${(e as Error).message}`);
-      return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${(e as Error).message}`);
+    const filename = Date.now() + path.extname(file.filename).toLowerCase();
+    const savePath = path.join(__dirname, filename);
+    const writeStream = fs.createWriteStream(savePath);
+    file.pipe(writeStream);
+    await new Promise(resolve => writeStream.on('close', resolve));
+
+    const client = new OpenAI({
+      apiKey: chatConfig.token,
+      baseURL: 'https://api.moonshot.cn/v1'
+    });
+
+    // 上传文件
+    const [fileError, fileObject] = await to(client.files.create({
+      file: fs.createReadStream(savePath),
+      purpose: 'file-extract'
+    }));
+
+    if (fileError) {
+      this.ctx.logger.debug(`调用上传图片接口失败: ${fileError.message}`);
+      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${fileError.message}`);
     }
 
-    if (!res) {
-      return this.ctx.helper.getResponseData(`调用上传图片接口未返回正确数据.`);
+    // 文件解析
+    const imageAnalysisConfig = this.config.parsingFile(fileObject.id, chatConfig.token);
+    const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
+
+    const [analysisError, res] = await to(ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption));
+
+    if (analysisError) {
+      this.ctx.logger.debug(`调用解析文件接口失败: ${analysisError.message}`);
+      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      return this.ctx.helper.getResponseData(`调用解析文件接口失败: ${analysisError.message}`);
     }
 
-    return res.data;
+    // 删除文件
+    await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+    await to(client.files.del(fileObject.id));
+
+    // 返回结果
+    res.data = JSON.parse(res.res.data.toString());
+    return res.data || this.ctx.helper.getResponseData('调用上传图片接口未返回正确数据.');
   }
 }
 
