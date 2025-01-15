@@ -10,10 +10,9 @@
 *
 */
 import { Controller } from 'egg';
-import { throwApiError } from '../../lib/ApiError';
-import { E_ErrorCode, E_MaterialErrorCode, E_TASK_STATUS, E_TASK_TYPE, E_Public } from '../../lib/enum';
-import { apiError } from '../../lib/ApiError';
-import { createBlockRule, updateBlockRule, buildBlockRule } from '../../validate/material-center/block';
+import { apiError, throwApiError } from '../../lib/ApiError';
+import { E_ErrorCode, E_MaterialErrorCode, E_Public } from '../../lib/enum';
+import { buildBlockRule, createBlockRule, updateBlockRule } from '../../validate/material-center/block';
 
 
 export default class BlockController extends Controller {
@@ -30,7 +29,7 @@ export default class BlockController extends Controller {
   }
   async list() {
     const { query } = this.ctx.request;
-    const {appId} = query;
+    const { appId } = query;
     if (appId && !/^[1-9]+[0-9]*$/.test(appId)) {
       delete query.appId;
     }
@@ -40,7 +39,7 @@ export default class BlockController extends Controller {
   async getBlocks() {
     this.ctx.body = await this.service.materialCenter.block.getBlocks(this.ctx.queries);
   }
-  
+
   async find() {
     this.ctx.body = await this.service.materialCenter.block.find(this.ctx.queries);
   }
@@ -52,9 +51,9 @@ export default class BlockController extends Controller {
   async findById() {
     const { id } = this.ctx.params;
     this.ctx.validate({
-        id: 'id'
+      id: 'id'
     },
-    {id}
+      { id }
     );
     this.ctx.body = await this.service.materialCenter.block.findById(id);
   }
@@ -91,7 +90,7 @@ export default class BlockController extends Controller {
       this.ctx.body = this.ctx.helper.getResponseData(null, error);
     }
   }
-  
+
   async create() {
     const { body } = this.ctx.request;
     this.ctx.validate(
@@ -130,7 +129,7 @@ export default class BlockController extends Controller {
     //  }
     this.ctx.body = await this.service.materialCenter.block.create(createParam);
   }
-  
+
   async update() {
     const { id } = this.ctx.params;
     const { body } = this.ctx.request;
@@ -181,10 +180,10 @@ export default class BlockController extends Controller {
   async build() {
     // post参数校验二次丰富
     this.ctx.validate(buildBlockRule);
-    const { deploy_info: message, block, version, needToSave = false } = this.ctx.request.body;
-    const { materialCenter, task } = this.ctx.service;
+    const { deploy_info: message, block, version } = this.ctx.request.body;
+    const { materialCenter } = this.ctx.service;
     const { content } = block;
-    
+
     if (!content) {
       throwApiError('', Number(E_ErrorCode.BadRequest), E_MaterialErrorCode.CM204);
     }
@@ -202,29 +201,48 @@ export default class BlockController extends Controller {
     block.screenshot = '';
     // 更新i18n 信息
     block.i18n = await materialCenter.block.getBlockI18n(id);
-    // 如果有未完成的任务直接返回该任务信息
-    let taskInfo: any = await task.getUnfinishedTask(E_TASK_TYPE.BLOCK_BUILD, id);
-    if (taskInfo?.data) {
-      this.ctx.body = taskInfo;
-      return;
-    }
 
-    const newTask = {
-      taskTypeId: E_TASK_TYPE.BLOCK_BUILD,
-      taskStatus: E_TASK_STATUS.INIT,
-      uniqueId: id
+    // 新模式不执行构建，直接更新数据库
+    // 新增区块历史
+    const { screenshot, path, description, label } = block;
+    const build_info = {
+      result: true,
+      versions: [version],
     };
-    taskInfo = await task.create(newTask);
-    // 执行构建
-    const body = { message, block, version, needToSave };
-    await this.service.materialCenter.blockBuilder.start(id, taskInfo.data.id, body )
-    this.ctx.body = taskInfo;
-
+    const assets = {
+      material: [],
+      scripts: [],
+      styles: [],
+    };
+    const historyParam = {
+      message,
+      content,
+      assets,
+      build_info,
+      screenshot,
+      path,
+      description,
+      label,
+      version,
+      block_id: block.id,
+      i18n: block.i18n ?? null,
+      created_app: block.created_app,
+    };
+    const history = await materialCenter.blockHistory.create(historyParam);
+    // 更新区块
+    const { data: oldBlock } = await materialCenter.block.findById(block.id);
+    block.last_build_info = build_info;
+    block.assets = assets;
+    const blockResult = await materialCenter.block.update({
+      ...block,
+      histories: [...oldBlock.histories.map(({ id }) => id), history.data.id]
+    });
+    this.ctx.body = blockResult;
   }
-  
+
   private async ensureBlockId(blockData): Promise<number | string> {
     const { auth, materialCenter } = this.ctx.service;
-    const { id, label, framework } = blockData; 
+    const { id, label, framework } = blockData;
     if (id) {
       return id;
     }
@@ -244,5 +262,5 @@ export default class BlockController extends Controller {
     const newBlock = await materialCenter.block.create(blockData);
     return newBlock.data.id ?? 0;
   }
-  
+
 }
