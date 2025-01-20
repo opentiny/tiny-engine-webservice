@@ -233,6 +233,7 @@ export default class BlockController extends Controller {
     const { data: oldBlock } = await materialCenter.block.findById(block.id);
     block.last_build_info = build_info;
     block.assets = assets;
+    block.current_history = history.data.id;
     const blockResult = await materialCenter.block.update({
       ...block,
       histories: [...oldBlock.histories.map(({ id }) => id), history.data.id]
