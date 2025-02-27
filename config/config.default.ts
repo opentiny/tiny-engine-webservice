@@ -277,7 +277,7 @@ export default (appInfo) => {
         manufacturer: '!openai'
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${token || process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${token || process.env.WENXIN_ACCESS_TOKEN}`,
         httpRequestOption: {
           ...commonRequestOption,
           data: {
