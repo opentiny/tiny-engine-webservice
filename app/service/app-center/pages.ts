@@ -174,10 +174,7 @@ class Pages extends DataService {
       if (item.isPage && item.isDefault) {
         return item.id;
       } else if (!item.isPage) {
-        const subPageId = await this.getSubPage(item.id);
-        if (subPageId !== false) {
-          return subPageId;
-        }
+        return this.getSubPage(item.id);
       }
     }
     return false;
