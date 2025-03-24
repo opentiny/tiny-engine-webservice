@@ -9,8 +9,8 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-import { RequestOptions2 as RequestOptions, HttpMethod } from 'urllib';
-import { E_TaskStatus, E_TaskType, E_SchemaFormatFunc, E_ProjectState, E_Framework, E_Schema2CodeType } from './enum';
+import { HttpMethod, RequestOptions2 as RequestOptions } from 'urllib';
+import { E_Framework, E_ProjectState, E_Schema2CodeType, E_SchemaFormatFunc, E_TaskStatus, E_TaskType } from './enum';
 
 /** **************系统接口*******************/
 // service 数据中心通用参数
@@ -148,6 +148,7 @@ export interface I_UpdatePageParam {
   depth?: number;
   message?: string;
   path_name?: string;
+  isDefault?: boolean;
 }
 
 // 页面历史
@@ -462,7 +463,7 @@ export interface I_CreateComponentLibrary {
 export interface I_CreateComponentLibraryParam {
   component: Array<any>,
   componentLibrary: I_CreateComponentLibrary
-}  
+}
 // AI聊天消息
 export interface IAiMessage {
   role: string; // 角色

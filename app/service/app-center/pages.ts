@@ -1,19 +1,25 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 import { StatusCodes } from 'http-status-codes';
 import * as qs from 'querystring';
 import { ApiError, throwApiError } from '../../lib/ApiError';
 import { E_AppErrorCode, E_ErrorCode, E_Framework, E_Method, E_Schema2CodeType, E_TYPES } from '../../lib/enum';
-import { I_CreatePageParam, I_GetOutcomeParam, I_Response, I_TranslateSchemaParam, I_UpdatePageParam } from '../../lib/interface';
+import {
+  I_CreatePageParam,
+  I_GetOutcomeParam,
+  I_Response,
+  I_TranslateSchemaParam,
+  I_UpdatePageParam
+} from '../../lib/interface';
 import DataService from '../dataService';
 
 class Pages extends DataService {
@@ -53,7 +59,7 @@ class Pages extends DataService {
     });
 
     const res: Array<any> = [];
-    pageList.data.forEach(item => {
+    pageList.data.forEach((item) => {
       if (item.isHome === '1') {
         item.isHome = true;
         res.unshift(item);
@@ -76,9 +82,6 @@ class Pages extends DataService {
       return await this.service.appCenter.folders.del(id);
     }
 
-    // 保护默认页面
-    await this.protectDefaultPage(pageInfo, pageInfo.data.app);
-
     return await this.fQuery({
       url: `pages/${id}`,
       method: E_Method.Delete
@@ -96,8 +99,10 @@ class Pages extends DataService {
 
     const { app } = pageInfo.data;
 
-    // 保护默认页面
-    await this.protectDefaultPage(pageInfo, app);
+    // 默认页面
+    if (param.isDefault) {
+      await this.protectDefaultPage(pageInfo);
+    }
 
     let res: any = {};
     // 针对参数中isHome的传值进行isHome字段的判定
@@ -131,16 +136,49 @@ class Pages extends DataService {
     return updatePageInfo;
   }
 
-  async protectDefaultPage(pageInfo: I_Response, id: number) {
-    if (pageInfo.data.isDefault) {
-      // 查询是否是模板应用，不是的话不能删除或修改
-      const app = await this.service.appCenter.apps.findOne({ id });
-      if (!app.data?.template_type) {
-        throw (new ApiError('', E_ErrorCode.BadRequest, E_AppErrorCode.CM301));
-      }
+  async protectDefaultPage(pageInfo: I_Response) {
+    const id = pageInfo.data.parentId;
+    const parentId = await this.getParentPage(id);
+    const subPageId = await this.getSubPage(parentId);
+    if (subPageId === false) {
+      return true;
+    }
+    const param = {
+      isDefault: false
+    };
+    const updatePageInfo = await this.fQuery({
+      url: `pages/${subPageId}`,
+      method: E_Method.Put,
+      data: param
+    });
+    if (!updatePageInfo.data.id) {
+      throw new ApiError('', E_ErrorCode.BadRequest, E_AppErrorCode.CM301);
     }
   }
 
+  protected async getParentPage(parentId: string) {
+    const page = await this.getPageById(Number(parentId));
+    if (page.data.isPage || page.data.parentId === '0') {
+      return parentId;
+    }
+    return this.getParentPage(page.data.parentId);
+  }
+
+  protected async getSubPage(parentId: string) {
+    if (parentId === '0') {
+      return false;
+    }
+    const pageList = await this.find({ parent_id: parentId });
+    // 查找默认子页面
+    for (const item of pageList.data) {
+      if (item.isPage && item.isDefault) {
+        return item.id;
+      } else if (!item.isPage) {
+        return this.getSubPage(item.id);
+      }
+    }
+    return false;
+  }
   async createPage(param: I_CreatePageParam) {
     const { folderTree } = this.ctx.service.appCenter;
     // 判断isHome 为true时，parentId 不为0，禁止创建
@@ -189,7 +227,7 @@ class Pages extends DataService {
 
   /**
    * 调用dsl转换页面或区块的schema为代码
-   * @param { I_GetOutcomeParam } params 
+   * @param { I_GetOutcomeParam } params
    * @returns { Promise<I_Response> } dsl库返回解析代码的对象
    */
   async getOutcome(params: I_GetOutcomeParam): Promise<I_Response> {
@@ -223,7 +261,7 @@ class Pages extends DataService {
    * @param { any } pageInfo 页面内容数据
    * @param { E_Schema2CodeType } type 处理数据类型， 默认 Page
    * @return { Promise<I_Response> } dsl函数返回数据
-  */
+   */
   schema2code(appId: string | number, pageInfo: any, type: E_Schema2CodeType = E_Schema2CodeType.PAGE): Promise<any> {
     const { schema, name } = pageInfo;
     return this.translateSchema({
@@ -240,7 +278,7 @@ class Pages extends DataService {
    * @param { number|string } id 页面或区块id
    * @param { number|string } app 应用id
    * @return { Promise<I_Response> }
-  */
+   */
   getPreviewMetaData(type: E_Schema2CodeType, id: number | string, app: number | string): Promise<I_Response> {
     const { appCenter, materialCenter } = this.service;
     if (type === E_Schema2CodeType.BLOCK) {
@@ -261,7 +299,7 @@ class Pages extends DataService {
    * 通过appId 获取 dsl 必须的 components 和 blocksData数据
    * @param { string|number } appId 应用id
    * @return {any} 返回对应参数
-  */
+   */
   protected async getDslParamByAppId(appId: string | number) {
     const { appCenter } = this.service;
     // 获取应用下的物料资产包
@@ -283,7 +321,7 @@ class Pages extends DataService {
    * 通过dsl 将页面/区块schema数据生成对应代码
    * @param { I_TranslateSchemaParam } params
    * @return {Promise<I_Response>} dsl函数返回数据
-  */
+   */
   protected async translateSchema(params: I_TranslateSchemaParam): Promise<I_Response> {
     const { appCenter } = this.service;
     const { schema, name, type = E_Schema2CodeType.PAGE, appId, framework: customFramework } = params;
