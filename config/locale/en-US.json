@@ -29,7 +29,7 @@
   "CM207": "Do not have permission to build this material",
   "CM208": "Parameter error. The associated template type does not match the group template type.",
 
-  "CM301": "default page can not be deleted or modified",
+  "CM301": "failed to modify the default page",
   "CM302": "fetch repository failed",
   "CM303": "checkout to the branch failed, make sure it exists?",
   "CM304": "checkout to new branch failed",

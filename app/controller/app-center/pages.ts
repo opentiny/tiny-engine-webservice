@@ -11,7 +11,7 @@
 */
 import { Controller } from 'egg';
 import { E_Schema2CodeType } from '../../lib/enum';
-import { 
+import {
   dslCodeRule,
   schema2codeRule,
   createPageRule,
@@ -120,7 +120,7 @@ class PagesController extends Controller {
       // 更新页面
       const updatePageParam = this.ctx.helper.pickObject(
         { id, ...body },
-        ['id', 'isBody', 'isHome', 'message', 'name', 'parentId', 'route', 'page_content']
+        ['id', 'isBody', 'isHome', 'message', 'name', 'parentId', 'route', 'page_content', 'isDefault']
       );
       this.ctx.validate(updatePageRule, updatePageParam);
       this.ctx.body = await pages.updatePage(updatePageParam);
@@ -150,7 +150,7 @@ class PagesController extends Controller {
    * @router GET /api/code
    * @summary 获取页面或者区块的代码
    */
-   async dslCode() {
+  async dslCode() {
     const { type, id, history, app } = this.ctx.query;
     const { appCenter } = this.ctx.service;
     this.ctx.validate(dslCodeRule, this.ctx.query);
