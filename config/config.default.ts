@@ -47,6 +47,12 @@ export default (appInfo) => {
     }
   };
 
+  config.cors = {
+    origin: '*',
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
+    credentials: true
+  };
+
   config.deploy = {
     baseDir: path.resolve(appInfo.baseDir, './deploy'),
     obsOrigin: process.env.obsAccessUrl,
@@ -62,7 +68,6 @@ export default (appInfo) => {
   };
 
   config.queueName = 'tinyengine.build.platform'; // 构建设计器 rabbitMq 队列名称
-
 
   config.security = {
     csrf: {
@@ -101,7 +106,6 @@ export default (appInfo) => {
       vue: '@opentiny/tiny-engine-preview-vue'
     }
   };
-
 
   config.proxy = true;
 
@@ -277,7 +281,9 @@ export default (appInfo) => {
         manufacturer: '!openai'
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${token || process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${
+          token || process.env.WENXIN_ACCESS_TOKEN
+        }`,
         httpRequestOption: {
           ...commonRequestOption,
           data: {
@@ -286,6 +292,20 @@ export default (appInfo) => {
           }
         },
         manufacturer: 'baidu'
+      },
+      [E_FOUNDATION_MODEL.DEEPSEEK_CHAT]: {
+        httpRequestUrl: `https://api.deepseek.com/chat/completions`,
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.DEEPSEEK_CHAT,
+            messages
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        },
+        manufacturer: 'deepseek'
       },
       [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
         httpRequestUrl: `https://api.moonshot.cn/v1/chat/completions`,
@@ -337,19 +357,15 @@ export default (appInfo) => {
     };
   };
 
-  config.npmRegistryOptions = [
-    '--registry=https://registry.npmjs.org/'
-  ];
+  config.npmRegistryOptions = ['--registry=https://registry.npmjs.org/'];
   // 国内镜像
-  config.cnpmRegistryOptions = [
-    '--registry=http://registry.npmmirror.com/'
-  ];
+  config.cnpmRegistryOptions = ['--registry=http://registry.npmmirror.com/'];
   config.buildground = '/tmp/buildground';
   config.baseNpm = '@opentiny/tiny-engine-block-build';
   config.authToken = process.env.NPM_AUTH_TOKEN; // 替换为自己的npm token
   config.registry = 'https://registry.npmjs.org/'; // 如果部署了私仓可替换为自己私仓地址
-  config.projectName = process.env.GIT_REPO;     // 应用发布git仓库地址
-  config.gitBranch = process.env.GIT_BRANCH;     // 应用发布git代码默认提交分支
+  config.projectName = process.env.GIT_REPO; // 应用发布git仓库地址
+  config.gitBranch = process.env.GIT_BRANCH; // 应用发布git代码默认提交分支
   config.userName = process.env.GIT_USERNAME;
   config.userToken = process.env.GIT_USER_TOKEN;
   config.email = process.env.GIT_EMAIL;

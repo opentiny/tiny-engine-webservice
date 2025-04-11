@@ -290,5 +290,6 @@ export enum E_FOUNDATION_MODEL {
   GPT_35_TURBO = 'gpt-3.5-turbo', // openai
   Local_GPT = 'local-compatible-gpt-3.5', //本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。
   ERNIE_BOT_TURBO = 'ERNIE-4.0-8K', // 文心一言
-  MOONSHOT_V1_8K = 'moonshot-v1-8k' // kimi
+  MOONSHOT_V1_8K = 'moonshot-v1-8k', // kimi
+  DEEPSEEK_CHAT = 'deepseek-chat' // DeepSeek-V3
 }
