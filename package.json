@@ -16,7 +16,7 @@
   "scripts": {
     "start": "egg-scripts start --daemon --stdout=/opt/cloud/logs/master-stdout.log --stderr=/opt/cloud/logs/master-stderr.log --title=lowcode-webservice",
     "stop": "egg-scripts stop --stdout=/opt/cloud/logs/master-stdout.log --stderr=/opt/cloud/logs/master-stderr.log --title=lowcode-webservice",
-    "dev": "egg-bin dev --port 7011",
+    "dev": "egg-bin dev --port 7020",
     "debug": "egg-bin debug --port 7011",
     "test-local": "egg-bin test",
     "test": "npm run lint -- --fix && npm run test-local",

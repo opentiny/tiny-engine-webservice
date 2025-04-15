@@ -9,14 +9,18 @@
 * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
 *
 */
-import { EggAppConfig, PowerPartial } from 'egg';
+import { Controller } from 'egg';
 
-export default () => {
-  const config: PowerPartial<EggAppConfig> = {};
-  config.dataCenter = {
-    host: process.env.DATA_CENTER_URL || 'http://localhost:1356',
-    sessionKeyPrefix: 'lowcode:data:'
-  };
+export default class userComponentController extends Controller {
+
+  /**
+   * @summary 注册组件库
+   * @router POST /api/componentLibrary/create
+   */
+  async bundleCreate(){
+    const ctx = this.ctx;
+    const fileStream = await ctx.getFileStream();
+    this.ctx.body = await this.ctx.service.materialCenter.userComponents.bundleCreate(fileStream);
+  }
   
-  return config;
-};
+}

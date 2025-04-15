@@ -74,6 +74,12 @@ export default (appInfo) => {
     domainWhiteList: ['']
   };
 
+  config.cors = {
+    origin: '*', //允许所有来源的请求
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
+    credentials: true, // 如果需要支持带凭证的跨域请求，则设置为true
+  }
+
   config.dsl = {
     'vue-tiny': {
       dslGeneratorPkg: '@opentiny/tiny-engine-dsl-vue',
