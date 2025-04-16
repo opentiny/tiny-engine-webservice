@@ -88,6 +88,9 @@ class AppSchema extends SchemaService {
 
   private getPackages() {
     const {componentLibrary} = this.meta;
+    if(!Array.isArray(componentLibrary)) {
+      return this.ctx.helper.getResponseData([]);
+    }
     const packages = componentLibrary.map((item) => ({
       name: item.name,
       package: item.packageName,
