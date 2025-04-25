@@ -82,7 +82,7 @@ export default class UserComponent extends DataService{
   async bulkComponentCreate(componentList) {
     let componentLibraryListResult: any = [];
     const fileResult = {
-      addNum: 0,
+      insertNum: 0,
       updateNum: 0
     }
      
@@ -113,11 +113,21 @@ export default class UserComponent extends DataService{
       component.library = libraryId;
 
       if (!componentQueryList.data.length) {
-        fileResult.addNum += 1;
+        fileResult.insertNum += 1;
         // 新增组件
         component.id = null;
         const componentObject: I_Response = await this.create(component);
         componentLibraryListResult.push(componentObject);
+        // 修改物料和物料历史
+        await this.service.materialCenter.materialHistories.update({
+          id: 639,
+          components: componentObject.data.id
+        })
+        await this.service.materialCenter.material.update({
+          id: 1505,
+          user_components: componentObject.data.id
+        })
+
       } else {
         fileResult.updateNum += 1;
         // 修改组件
@@ -125,10 +135,11 @@ export default class UserComponent extends DataService{
         const componentObject: I_Response = await this.update(component);
         componentLibraryListResult.push(componentObject);
       }
-    }));
 
+    }));
+    
     // 返回新增或者修改的条数
-    return fileResult;
+    return this.ctx.helper.getResponseData(fileResult);
   }
 
   async create(param) {
