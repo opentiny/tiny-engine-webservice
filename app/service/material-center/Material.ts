@@ -15,9 +15,6 @@ import * as qs from 'querystring';
 
 export default class Material extends DataService{
 
-  capitalize = (str) => `${str.charAt(0).toUpperCase()}${str.slice(1)}`;
-  toPascalCase = (str) => str.split('-').map(this.capitalize).join('');
-
   private base = 'materials';
 
   async update(param) {
