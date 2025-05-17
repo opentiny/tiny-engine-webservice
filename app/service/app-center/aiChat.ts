@@ -194,7 +194,7 @@ export default class AiChat extends Service {
   }
 
   private getSearchList(res) {
-    const list = res?.body?.Data?.Nodes;
+    const list = res?.body?.Data?.Nodes ?? [];
 
     return {
       data: list.map((node) => {
@@ -221,7 +221,12 @@ export default class AiChat extends Service {
       query: OpenApiUtil.query(queries)
     });
 
-    res = await client.callApi(params, request, runtime);
+    try {
+      res = await client.callApi(params, request, runtime);
+    } catch (e) {
+      this.ctx.logger.debug('Alibaba Cloud search failed', e);
+      return this.ctx.helper.getResponseData('知识库检索接口调用失败');
+    }
 
     return this.getSearchList(res);
   }
