@@ -10,13 +10,15 @@
  *
  */
 import { Service } from 'egg';
-import { E_FOUNDATION_MODEL } from '../../lib/enum';
 import * as fs from 'fs';
 import * as path from 'path';
+import OpenApi, * as $OpenApi from '@alicloud/openapi-client';
+import OpenApiUtil from '@alicloud/openapi-util';
+import * as $Util from '@alicloud/tea-util';
+import Credential, { Config } from '@alicloud/credentials';
 
 const to = require('await-to-js').default;
 const OpenAI = require('openai');
-
 
 export type AiMessage = {
   role: string; // 角色
@@ -34,182 +36,47 @@ export default class AiChat extends Service {
   /**
    * 获取ai的答复
    *
-   * 根据后续引进的大模型情况决定，是否通过重构来对不同大模型进行统一的适配
-   *
    * @param messages
    * @param model
    * @return
    */
 
-  async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    let res = await this.requestAnswerFromAi(messages, chatConfig);
-    let answerContent = '';
-    let isFinish = res.choices[0].finish_reason;
+  async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any, res: any = null) {
+    let result: any = null;
 
-    if (isFinish !== 'length') {
-      answerContent = res.choices[0]?.message.content;
-    }
-
-    // 若内容过长被截断，继续回复
-    while (isFinish === 'length') {
-      const prefix = res.choices[0].message.content;
-      answerContent += prefix;
-      messages.push({
-        role: 'assistant',
-        content: prefix,
-        partial: true
+    try {
+      const openai = new OpenAI({
+        apiKey: chatConfig.apiKey || process.env.OPEN_AI_API_KEY,
+        baseURL: chatConfig.baseUrl || process.env.OPEN_AI_BASE_URL
       });
 
-      res = await this.requestAnswerFromAi(messages, chatConfig);
-      answerContent += res.choices[0].message.content;
-      isFinish = res.choices[0].finish_reason;
-    }
+      result = await openai.chat.completions.create({
+        model: chatConfig.model || process.env.OPEN_AI_MODEL,
+        messages,
+        stream: chatConfig.streamStatus
+      });
 
-    const code = this.extractCode(answerContent);
-    const schema = this.extractSchemaCode(code);
-    const answer = {
-      role: res.choices[0].message.role,
-      content: answerContent
-    };
-    const replyWithoutCode = this.removeCode(answerContent);
-    return this.ctx.helper.getResponseData({
-      originalResponse: answer,
-      replyWithoutCode,
-      schema
-    });
-  }
-
-  async requestAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    const { ctx } = this;
-    this.formatMessage(messages);
-    let res: any = null;
-    try {
-      // 根据大模型的不同匹配不同的配置
-      const aiChatConfig = this.config.aiChat(messages, chatConfig.token);
-      const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
-      this.ctx.logger.debug(httpRequestOption);
-      res = await ctx.curl(httpRequestUrl, httpRequestOption);
+      // 逐块发送数据到前端
+      if (chatConfig.streamStatus) {
+        for await (const chunk of result) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
+        }
+      } else {
+        return result;
+      }
     } catch (e: any) {
       this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
+    } finally {
+      if (res) {
+        res.end(); // 关闭连接
+      }
     }
 
     if (!res) {
       return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
-
-    // 适配文心一言的响应数据结构，文心的部分异常情况status也是200，需要转为400，以免前端无所适从
-    if (res.data?.error_code) {
-      return this.ctx.helper.getResponseData(res.data?.error_msg);
-    }
-
-    // 适配chatgpt的响应数据结构
-    if (res.status !== 200) {
-      return this.ctx.helper.getResponseData(res.data?.error?.message, res.status);
-    }
-
-    // 适配文心一言的响应数据结构
-    if (chatConfig.model === E_FOUNDATION_MODEL.ERNIE_BOT_TURBO) {
-      return {
-        ...res.data,
-        choices: [
-          {
-            message: {
-              role: 'assistant',
-              content: res.data.result
-            }
-          }
-        ]
-      };
-    }
-
-    return res.data;
-  }
-
-  /**
-   * 提取回复中的代码
-   *
-   * 暂且只满足回复中只包括一个代码块的场景
-   *
-   * @param content ai回复的内容
-   * @return 提取的文本
-   */
-  private extractCode(content: string) {
-    const { start, end } = this.getStartAndEnd(content);
-    if (start < 0 || end < 0) {
-      return '';
-    }
-    return content.substring(start, end);
-  }
-
-  /**
-   * 去除回复中的代码
-   *
-   * 暂且只满足回复中只包括一个代码块的场景
-   *
-   * @param content ai回复的内容
-   * @return 去除代码后的回复内容
-   */
-  private removeCode(content: string) {
-    const { start, end } = this.getStartAndEnd(content);
-    if (start < 0 || end < 0) {
-      return content;
-    }
-    return content.substring(0, start) + '<代码在画布中展示>' + content.substring(end);
-  }
-
-  private extractSchemaCode(content) {
-    const startMarker = /```json/;
-    const endMarker = /```/;
-
-    const start = content.search(startMarker);
-    const end = content.slice(start + 7).search(endMarker) + start + 7;
-
-    if (start >= 0 && end >= 0) {
-      return JSON.parse(content.substring(start + 7, end).trim());
-    }
-
-    return null;
-  }
-
-  private getStartAndEnd(str: string) {
-    const start = str.search(/```|<template>/);
-
-    // 匹配对应的结束标记
-    const endMarkerRegex = /```|<\/template>|<\/script>|<\/style>/g;
-    let match;
-    // 如果找不到匹配的结束标记，返回-1
-    let end = -1;
-    while ((match = endMarkerRegex.exec(str)) !== null) {
-      if (match.index > start) {
-        end = match.index + match[0].length;
-      }
-    }
-
-    return { start, end };
-  }
-
-  private formatMessage(messages: Array<any>) {
-    const defaultWords: any = {
-      role: 'user',
-      content: `你是一名前端开发专家，编码时遵从以下几条要求:
-      ###
-      1. 只使用 element-ui组件库的el-button 和 el-table组件
-      2. el-table表格组件的使用方式为 <el-table :columns="columnData" :data="tableData"></el-table> columns的columnData表示列数据，其中用title表示列名，field表示表格数据字段； data的tableData表示表格展示的数据。 el-table标签内不得出现子元素
-      3. 使用vue2技术栈
-      4. 回复中只能有一个代码块
-      5. 不要加任何注释
-      6. el-table标签内不得出现el-table-column
-      ###`
-    };
-    const reg = /.*\u7f16\u7801\u65f6\u9075\u4ece\u4ee5\u4e0b\u51e0\u6761\u8981\u6c42.*/;
-    const { role, content } = messages[0];
-    if (role !== 'user') {
-      messages.unshift(defaultWords);
-    } else if (!reg.test(content)) {
-      messages[0].content = `${defaultWords.content}\n${messages[0].content}`;
-    }
-    return messages;
   }
 
   /**
@@ -232,7 +99,7 @@ export default class AiChat extends Service {
     const savePath = path.join(__dirname, filename);
     const writeStream = fs.createWriteStream(savePath);
     file.pipe(writeStream);
-    await new Promise(resolve => writeStream.on('close', resolve));
+    await new Promise((resolve) => writeStream.on('close', resolve));
 
     const client = new OpenAI({
       apiKey: chatConfig.token,
@@ -240,14 +107,16 @@ export default class AiChat extends Service {
     });
 
     // 上传文件
-    const [fileError, fileObject] = await to(client.files.create({
-      file: fs.createReadStream(savePath),
-      purpose: 'file-extract'
-    }));
+    const [fileError, fileObject] = await to(
+      client.files.create({
+        file: fs.createReadStream(savePath),
+        purpose: 'file-extract'
+      })
+    );
 
     if (fileError) {
       this.ctx.logger.debug(`调用上传图片接口失败: ${fileError.message}`);
-      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
       return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${fileError.message}`);
     }
 
@@ -259,17 +128,101 @@ export default class AiChat extends Service {
 
     if (analysisError) {
       this.ctx.logger.debug(`调用解析文件接口失败: ${analysisError.message}`);
-      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
       return this.ctx.helper.getResponseData(`调用解析文件接口失败: ${analysisError.message}`);
     }
 
     // 删除文件
-    await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+    await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
     await to(client.files.del(fileObject.id));
 
     // 返回结果
     res.data = JSON.parse(res.res.data.toString());
     return res.data || this.ctx.helper.getResponseData('调用上传图片接口未返回正确数据.');
   }
-}
 
+  /**
+   * 知识库检索
+   * @remarks
+   * 使用凭据初始化账号Client
+   * @returns Client
+   *
+   * @throws Exception
+   */
+  private createClient(): OpenApi {
+    const credentialsConfig1 = new Config({
+      type: 'access_key',
+      accessKeyId: process.env.ALIBABA_CLOUD_ACCESS_KEY_ID,
+      accessKeySecret: process.env.ALIBABA_CLOUD_ACCESS_KEY_SECRET
+    });
+    let credential = new Credential(credentialsConfig1);
+    let config = new $OpenApi.Config({
+      credential: credential
+    });
+
+    config.endpoint = `bailian.cn-beijing.aliyuncs.com`;
+    return new OpenApi(config);
+  }
+
+  /**
+   * @remarks
+   * API 相关
+   *
+   * @param path - string Path parameters
+   * @returns OpenApi.Params
+   */
+  private createApiInfo(WorkspaceId): $OpenApi.Params {
+    let params = new $OpenApi.Params({
+      // 接口名称
+      action: 'Retrieve',
+      // 接口版本
+      version: '2023-12-29',
+      // 接口协议
+      protocol: 'HTTPS',
+      // 接口 HTTP 方法
+      method: 'POST',
+      authType: 'AK',
+      style: 'ROA',
+      // 接口 PATH
+      pathname: `/${WorkspaceId}/index/retrieve`,
+      // 接口请求体内容格式
+      reqBodyType: 'json',
+      // 接口响应体内容格式
+      bodyType: 'json'
+    });
+    return params;
+  }
+
+  private getSearchList(res) {
+    const list = res?.body?.Data?.Nodes;
+
+    return {
+      data: list.map((node) => {
+        return {
+          score: node.Score,
+          content: node.Text
+        };
+      })
+    };
+  }
+
+  async search(content: string[]) {
+    let res: any = null;
+    let client = this.createClient();
+    let params = this.createApiInfo(process.env.ALIBABA_CLOUD_WORKSPACE_ID);
+    // query params
+    let queries: { [key: string]: any } = {};
+    queries['Query'] = content;
+    queries['EnableRewrite'] = true;
+    queries['IndexId'] = process.env.ALIBABA_CLOUD_INDEX_ID;
+    // runtime options
+    let runtime = new $Util.RuntimeOptions({});
+    let request = new $OpenApi.OpenApiRequest({
+      query: OpenApiUtil.query(queries)
+    });
+
+    res = await client.callApi(params, request, runtime);
+
+    return this.getSearchList(res);
+  }
+}
