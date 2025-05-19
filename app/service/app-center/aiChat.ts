@@ -10,8 +10,6 @@
  *
  */
 import { Service } from 'egg';
-import * as fs from 'fs';
-import * as path from 'path';
 import OpenApi, * as $OpenApi from '@alicloud/openapi-client';
 import OpenApiUtil from '@alicloud/openapi-util';
 import * as $Util from '@alicloud/tea-util';
@@ -19,19 +17,12 @@ import Credential, { Config } from '@alicloud/credentials';
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
-const to = require('await-to-js').default;
-
 export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
   partial?: boolean;
 };
-
-interface ConfigModel {
-  model: string;
-  token: string;
-}
 
 export default class AiChat extends Service {
   /**
@@ -78,68 +69,6 @@ export default class AiChat extends Service {
     if (!res) {
       return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
-  }
-
-  /**
-   * 文件上传
-   *
-   * @param model
-   * @return
-   */
-
-  async getFileContentFromAi(fileStream: any, chatConfig: ConfigModel) {
-    const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
-    return this.ctx.helper.getResponseData({
-      originalResponse: answer
-    });
-  }
-
-  async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
-    const { ctx } = this;
-    const filename = Date.now() + path.extname(file.filename).toLowerCase();
-    const savePath = path.join(__dirname, filename);
-    const writeStream = fs.createWriteStream(savePath);
-    file.pipe(writeStream);
-    await new Promise((resolve) => writeStream.on('close', resolve));
-
-    const client = new OpenAI({
-      apiKey: chatConfig.token,
-      baseURL: 'https://api.moonshot.cn/v1'
-    });
-
-    // 上传文件
-    const [fileError, fileObject] = await to(
-      client.files.create({
-        file: fs.createReadStream(savePath),
-        purpose: 'file-extract'
-      })
-    );
-
-    if (fileError) {
-      this.ctx.logger.debug(`调用上传图片接口失败: ${fileError.message}`);
-      await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
-      return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${fileError.message}`);
-    }
-
-    // 文件解析
-    const imageAnalysisConfig = this.config.parsingFile(fileObject.id, chatConfig.token);
-    const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
-
-    const [analysisError, res] = await to(ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption));
-
-    if (analysisError) {
-      this.ctx.logger.debug(`调用解析文件接口失败: ${analysisError.message}`);
-      await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
-      return this.ctx.helper.getResponseData(`调用解析文件接口失败: ${analysisError.message}`);
-    }
-
-    // 删除文件
-    await fs.promises.unlink(savePath).catch((err) => console.error('文件删除失败:', err));
-    await to(client.files.del(fileObject.id));
-
-    // 返回结果
-    res.data = JSON.parse(res.res.data.toString());
-    return res.data || this.ctx.helper.getResponseData('调用上传图片接口未返回正确数据.');
   }
 
   /**

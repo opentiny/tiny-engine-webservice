@@ -47,14 +47,6 @@ export default class AiChatController extends Controller {
     });
   }
 
-  public async uploadFile() {
-    const { ctx } = this;
-    const fileStream = await ctx.getFileStream();
-    const foundationModelObject = JSON.parse(fileStream.fields.foundationModel);
-    const { model, token } = foundationModelObject.foundationModel;
-    ctx.body = await ctx.service.appCenter.aiChat.getFileContentFromAi(fileStream, { model, token });
-  }
-
   public async search() {
     const { ctx } = this;
     const { content } = ctx.request.body;
