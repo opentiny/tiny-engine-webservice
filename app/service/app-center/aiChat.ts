@@ -16,9 +16,10 @@ import OpenApi, * as $OpenApi from '@alicloud/openapi-client';
 import OpenApiUtil from '@alicloud/openapi-util';
 import * as $Util from '@alicloud/tea-util';
 import Credential, { Config } from '@alicloud/credentials';
+import OpenAI from 'openai';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 const to = require('await-to-js').default;
-const OpenAI = require('openai');
 
 export type AiMessage = {
   role: string; // 角色
@@ -41,7 +42,7 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any, res: any = null) {
+  async getAnswerFromAi(messages: ChatCompletionMessageParam[], chatConfig: any, res: any = null) {
     let result: any = null;
 
     try {
@@ -200,7 +201,8 @@ export default class AiChat extends Service {
       data: list.map((node) => {
         return {
           score: node.Score,
-          content: node.Text
+          content: node.Text,
+          doc_name: node.Metadata.doc_name
         };
       })
     };
