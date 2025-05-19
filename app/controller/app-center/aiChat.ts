@@ -30,11 +30,23 @@ export default class AiChatController extends Controller {
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive'
       });
-      await ctx.service.appCenter.aiChat.getAnswerFromAi(
-        messages,
-        { apiKey, baseUrl, model, streamStatus },
-        ctx.res
-      );
+      try {
+        const result = await ctx.service.appCenter.aiChat.getAnswerFromAi(messages, {
+          apiKey,
+          baseUrl,
+          model,
+          streamStatus
+        });
+        for await (const chunk of result) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          ctx.res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
+        }
+      } catch (e: any) {
+        ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
+      } finally {
+        ctx.res.end(); // 关闭连接
+      }
+
       return;
     }
 

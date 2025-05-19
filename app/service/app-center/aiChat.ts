@@ -33,7 +33,7 @@ export default class AiChat extends Service {
    * @return
    */
 
-  async getAnswerFromAi(messages: ChatCompletionMessageParam[], chatConfig: any, res: any = null) {
+  async getAnswerFromAi(messages: ChatCompletionMessageParam[], chatConfig: any) {
     let result: any = null;
 
     try {
@@ -48,26 +48,10 @@ export default class AiChat extends Service {
         stream: chatConfig.streamStatus
       });
 
-      // 逐块发送数据到前端
-      if (chatConfig.streamStatus) {
-        for await (const chunk of result) {
-          const content = chunk.choices[0]?.delta?.content || '';
-          res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
-        }
-      } else {
-        return result;
-      }
+      return result;
     } catch (e: any) {
       this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
-    } finally {
-      if (res) {
-        res.end(); // 关闭连接
-      }
-    }
-
-    if (!res) {
-      return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
   }
 
@@ -143,9 +127,12 @@ export default class AiChat extends Service {
     let params = this.createApiInfo(process.env.ALIBABA_CLOUD_WORKSPACE_ID);
     // query params
     let queries: { [key: string]: any } = {};
-    queries['Query'] = content;
-    queries['EnableRewrite'] = true;
-    queries['IndexId'] = process.env.ALIBABA_CLOUD_INDEX_ID;
+    const QUERY = 'Query';
+    const ENABLE_REWRITE = 'EnableRewrite';
+    const INDEX_ID = 'IndexId';
+    queries[QUERY] = content;
+    queries[ENABLE_REWRITE] = true;
+    queries[INDEX_ID] = process.env.ALIBABA_CLOUD_INDEX_ID;
     // runtime options
     let runtime = new $Util.RuntimeOptions({});
     let request = new $OpenApi.OpenApiRequest({
