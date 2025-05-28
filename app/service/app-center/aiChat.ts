@@ -1,25 +1,36 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 import { Service } from 'egg';
-import Transformer from '@opentiny/tiny-engine-transform';
 import { E_FOUNDATION_MODEL } from '../../lib/enum';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const to = require('await-to-js').default;
+const OpenAI = require('openai');
+
 
 export type AiMessage = {
   role: string; // 角色
   name?: string; // 名称
   content: string; // 聊天内容
+  partial?: boolean;
 };
 
-export default class AiChatService extends Service {
+interface ConfigModel {
+  model: string;
+  token: string;
+}
+
+export default class AiChat extends Service {
   /**
    * 获取ai的答复
    *
@@ -31,17 +42,40 @@ export default class AiChatService extends Service {
    */
 
   async getAnswerFromAi(messages: Array<AiMessage>, chatConfig: any) {
-    const answer = await this.requestAnswerFromAi(messages, chatConfig);
-    const answerContent = answer.choices[0]?.message.content;
-    // 从ai回复中提取页面的代码
-    const codes = this.extractCode(answerContent);
-    const schema = codes ? Transformer.translate(codes) : null;
-    const replyWithoutCode = this.removeCode(answerContent);
+    let res = await this.requestAnswerFromAi(messages, chatConfig);
+    let answerContent = '';
+    let isFinish = res.choices[0].finish_reason;
 
+    if (isFinish !== 'length') {
+      answerContent = res.choices[0]?.message.content;
+    }
+
+    // 若内容过长被截断，继续回复
+    while (isFinish === 'length') {
+      const prefix = res.choices[0].message.content;
+      answerContent += prefix;
+      messages.push({
+        role: 'assistant',
+        content: prefix,
+        partial: true
+      });
+
+      res = await this.requestAnswerFromAi(messages, chatConfig);
+      answerContent += res.choices[0].message.content;
+      isFinish = res.choices[0].finish_reason;
+    }
+
+    const code = this.extractCode(answerContent);
+    const schema = this.extractSchemaCode(code);
+    const answer = {
+      role: res.choices[0].message.role,
+      content: answerContent
+    };
+    const replyWithoutCode = this.removeCode(answerContent);
     return this.ctx.helper.getResponseData({
       originalResponse: answer,
       replyWithoutCode,
-      schema,
+      schema
     });
   }
 
@@ -51,25 +85,27 @@ export default class AiChatService extends Service {
     let res: any = null;
     try {
       // 根据大模型的不同匹配不同的配置
-      const aiChatConfig = this.config.aiChat(messages);
+      const aiChatConfig = this.config.aiChat(messages, chatConfig.token);
       const { httpRequestUrl, httpRequestOption } = aiChatConfig[chatConfig.model];
+      this.ctx.logger.debug(httpRequestOption);
       res = await ctx.curl(httpRequestUrl, httpRequestOption);
     } catch (e: any) {
-      ctx.helper.throwError(`调用AI大模型接口失败: ${(e as Error).message}`, e?.status);
+      this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
+      return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
 
     if (!res) {
-      ctx.helper.throwError('调用AI大模型接口未返回正确数据');
+      return this.ctx.helper.getResponseData(`调用AI大模型接口未返回正确数据.`);
     }
 
     // 适配文心一言的响应数据结构，文心的部分异常情况status也是200，需要转为400，以免前端无所适从
     if (res.data?.error_code) {
-      ctx.helper.throwError(res.data?.error_msg);
+      return this.ctx.helper.getResponseData(res.data?.error_msg);
     }
 
     // 适配chatgpt的响应数据结构
     if (res.status !== 200) {
-      ctx.helper.throwError(res.data?.error?.message, res.status);
+      return this.ctx.helper.getResponseData(res.data?.error?.message, res.status);
     }
 
     // 适配文心一言的响应数据结构
@@ -80,10 +116,10 @@ export default class AiChatService extends Service {
           {
             message: {
               role: 'assistant',
-              content: res.data.result,
-            },
-          },
-        ],
+              content: res.data.result
+            }
+          }
+        ]
       };
     }
 
@@ -122,6 +158,20 @@ export default class AiChatService extends Service {
     return content.substring(0, start) + '<代码在画布中展示>' + content.substring(end);
   }
 
+  private extractSchemaCode(content) {
+    const startMarker = /```json/;
+    const endMarker = /```/;
+
+    const start = content.search(startMarker);
+    const end = content.slice(start + 7).search(endMarker) + start + 7;
+
+    if (start >= 0 && end >= 0) {
+      return JSON.parse(content.substring(start + 7, end).trim());
+    }
+
+    return null;
+  }
+
   private getStartAndEnd(str: string) {
     const start = str.search(/```|<template>/);
 
@@ -150,7 +200,7 @@ export default class AiChatService extends Service {
       4. 回复中只能有一个代码块
       5. 不要加任何注释
       6. el-table标签内不得出现el-table-column
-      ###`,
+      ###`
     };
     const reg = /.*\u7f16\u7801\u65f6\u9075\u4ece\u4ee5\u4e0b\u51e0\u6761\u8981\u6c42.*/;
     const { role, content } = messages[0];
@@ -160,6 +210,66 @@ export default class AiChatService extends Service {
       messages[0].content = `${defaultWords.content}\n${messages[0].content}`;
     }
     return messages;
+  }
+
+  /**
+   * 文件上传
+   *
+   * @param model
+   * @return
+   */
+
+  async getFileContentFromAi(fileStream: any, chatConfig: ConfigModel) {
+    const answer = await this.requestFileContentFromAi(fileStream, chatConfig);
+    return this.ctx.helper.getResponseData({
+      originalResponse: answer
+    });
+  }
+
+  async requestFileContentFromAi(file: any, chatConfig: ConfigModel) {
+    const { ctx } = this;
+    const filename = Date.now() + path.extname(file.filename).toLowerCase();
+    const savePath = path.join(__dirname, filename);
+    const writeStream = fs.createWriteStream(savePath);
+    file.pipe(writeStream);
+    await new Promise(resolve => writeStream.on('close', resolve));
+
+    const client = new OpenAI({
+      apiKey: chatConfig.token,
+      baseURL: 'https://api.moonshot.cn/v1'
+    });
+
+    // 上传文件
+    const [fileError, fileObject] = await to(client.files.create({
+      file: fs.createReadStream(savePath),
+      purpose: 'file-extract'
+    }));
+
+    if (fileError) {
+      this.ctx.logger.debug(`调用上传图片接口失败: ${fileError.message}`);
+      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      return this.ctx.helper.getResponseData(`调用上传图片接口失败: ${fileError.message}`);
+    }
+
+    // 文件解析
+    const imageAnalysisConfig = this.config.parsingFile(fileObject.id, chatConfig.token);
+    const { analysisImageHttpRequestUrl, analysisImageHttpRequestOption } = imageAnalysisConfig[chatConfig.model];
+
+    const [analysisError, res] = await to(ctx.curl(analysisImageHttpRequestUrl, analysisImageHttpRequestOption));
+
+    if (analysisError) {
+      this.ctx.logger.debug(`调用解析文件接口失败: ${analysisError.message}`);
+      await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+      return this.ctx.helper.getResponseData(`调用解析文件接口失败: ${analysisError.message}`);
+    }
+
+    // 删除文件
+    await fs.promises.unlink(savePath).catch(err => console.error('文件删除失败:', err));
+    await to(client.files.del(fileObject.id));
+
+    // 返回结果
+    res.data = JSON.parse(res.res.data.toString());
+    return res.data || this.ctx.helper.getResponseData('调用上传图片接口未返回正确数据.');
   }
 }
 

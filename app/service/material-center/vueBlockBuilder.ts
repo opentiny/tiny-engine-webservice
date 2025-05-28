@@ -13,7 +13,7 @@ import spawn from 'cross-spawn';
 import { Service } from 'egg';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-export default class VueBlockBuilder extends Service{
+export default class VueBlockBuilder extends Service {
   base = this.config.buildground
   baseNpm = this.config.baseNpm
   framework = 'Vue'
@@ -45,7 +45,7 @@ export default class VueBlockBuilder extends Service{
       cwd: buildGround
     })
     await this.spawnCommand(['npm', 'init', '-y'], { cwd: buildGround })
-    const registries = this.config.npmRegistryOptions
+    const registries = this.config.cnpmRegistryOptions
     await this.spawnCommand(['npm', 'pack', baseNpm, ...registries, '--strict-ssl=false'], {
       cwd: buildGround
     })
@@ -54,7 +54,7 @@ export default class VueBlockBuilder extends Service{
     await this.spawnCommand(['tar', '-xzvf', tgz], { cwd: buildGround })
     await fs.copy(path.join(buildGround, 'package'), buildGround)
     await this.spawnCommand(
-      ['npm', 'install', ...registries, '--no-audit', '--no-fund', '--production=false', '--strict-ssl=false'],
+      ['pnpm', 'install', ...registries, '--production=false'],
       {
         cwd: buildGround
       }

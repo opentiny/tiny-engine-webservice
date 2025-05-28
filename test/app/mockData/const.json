@@ -1,0 +1,23 @@
+{
+  "tenantId": 1,
+  "platformId": 835,
+  "tempUpdateAppId": 871,
+  "appId": 866,
+  "appVersion": "1.0.0",
+  "folderId": 1721,
+  "pageId": 1699,
+  "publish": {
+    "id": 866,
+    "commitMsg": "",
+    "branch": "test_branch",
+    "allGenerate": true,
+    "canCreateNewBranch": false
+  },
+  "app_extension": {
+    "id": 85,
+    "app": 866,
+    "name": "",
+    "category": "bridge",
+    "type": "npm"
+  }
+}

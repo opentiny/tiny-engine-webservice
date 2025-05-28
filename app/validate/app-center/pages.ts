@@ -78,6 +78,10 @@ export const updatePageRule = {
         type: 'object',
         rule: { componentName: ['Page'] },
         required: false
+    },
+    isDefault: {
+        type: 'boolean',
+        required: false
     }
 };
 

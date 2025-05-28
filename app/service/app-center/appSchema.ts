@@ -22,7 +22,8 @@ class AppSchema extends SchemaService {
     ['dataSource', this.getSchemaDataSource],
     ['i18n', this.getSchemaI18n],
     ['componentsTree', this.getSchemaComponentsTree],
-    ['componentsMap', this.getSchemaComponentsMap]
+    ['componentsMap', this.getSchemaComponentsMap],
+    ['packages', this.getPackages]
   ]);
 
   // 获取schema数据
@@ -79,8 +80,26 @@ class AppSchema extends SchemaService {
   // 获取应用信息
   private async setMeta(query?): Promise<I_Response> {
     const metaData: I_Response = await this.service.appCenter.apps.schemaMeta(this.appId, query);
+    const componentLibraryData = await this.service.materialCenter.componentLibrary.list();
     this.meta = metaData.data;
+    this.meta.componentLibrary = componentLibraryData.data;
     return metaData;
+  }
+
+  private getPackages() {
+    const {componentLibrary} = this.meta;
+    if(!Array.isArray(componentLibrary)) {
+      return this.ctx.helper.getResponseData([]);
+    }
+    const packages = componentLibrary.map((item) => ({
+      name: item.name,
+      package: item.packageName,
+      version: item.version,
+      script: item.script,
+      css: item.css,
+      others: item.others
+    }));
+    return this.ctx.helper.getResponseData(packages);
   }
 
   // 获取元数据

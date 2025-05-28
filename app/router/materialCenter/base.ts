@@ -62,4 +62,14 @@ export default (app: Application) => {
   subRouter.get('/tasks/status', controller.materialCenter.task.status);
   subRouter.get('/tasks/:id', controller.materialCenter.task.findById);
 
+  //组件库
+  subRouter.post('/component-library/update/:id',controller.materialCenter.componentLibrary.update);
+  subRouter.post('/component-library/create',controller.materialCenter.componentLibrary.create);
+  subRouter.delete('/component-library/delete/:id',controller.materialCenter.componentLibrary.delete);
+  subRouter.get('/component-library/find',controller.materialCenter.componentLibrary.find);
+
+
+  // 拆分bundle.json
+  subRouter.post('/component/bundle/create',controller.materialCenter.userComponents.bundleCreate);
+
 };

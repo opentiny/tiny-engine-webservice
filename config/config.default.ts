@@ -1,19 +1,18 @@
 /**
-* Copyright (c) 2023 - present TinyEngine Authors.
-* Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
-*
-* Use of this source code is governed by an MIT-style license.
-*
-* THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
-* BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
-* A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
-*
-*/
+ * Copyright (c) 2023 - present TinyEngine Authors.
+ * Copyright (c) 2023 - present Huawei Cloud Computing Technologies Co., Ltd.
+ *
+ * Use of this source code is governed by an MIT-style license.
+ *
+ * THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+ * BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR
+ * A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+ *
+ */
 import * as path from 'path';
 import { EggAppConfig, PowerPartial } from 'egg';
+import { E_FOUNDATION_MODEL, E_SchemaFormatFunc } from '../app/lib/enum';
 import { I_SchemaConvert } from '../app/lib/interface';
-import { E_SchemaFormatFunc, E_FOUNDATION_MODEL } from '../app/lib/enum';
-
 
 export default (appInfo) => {
   const config = {} as PowerPartial<EggAppConfig>;
@@ -48,6 +47,12 @@ export default (appInfo) => {
     }
   };
 
+  config.cors = {
+    origin: '*',
+    allowMethods: 'GET,HEAD,PUT,POST,DELETE,PATCH',
+    credentials: true
+  };
+
   config.deploy = {
     baseDir: path.resolve(appInfo.baseDir, './deploy'),
     obsOrigin: process.env.obsAccessUrl,
@@ -59,12 +64,10 @@ export default (appInfo) => {
     url: process.env.OBS_ACCESS_URL,
     serviceUrl: process.env.OBS_SERVICE_URL,
     subFolder: 'app-preview/source-code',
-    bucket: 'tiny-engine',
+    bucket: 'tiny-engine'
   };
 
   config.queueName = 'tinyengine.build.platform'; // 构建设计器 rabbitMq 队列名称
-
-
 
   config.security = {
     csrf: {
@@ -103,7 +106,6 @@ export default (appInfo) => {
       vue: '@opentiny/tiny-engine-preview-vue'
     }
   };
-
 
   config.proxy = true;
 
@@ -243,50 +245,127 @@ export default (appInfo) => {
     method: 'POST',
     dataType: 'json',
     contentType: 'json',
-    timeout: 10 * 60 * 1000, // 这里与当前大模型接口的最大响应时长保持一致
+    timeout: 10 * 60 * 1000 // 这里与当前大模型接口的最大响应时长保持一致
   };
 
   //ai大模型相关配置，请自行替换服务配置
-  config.aiChat = (messages = []) => {
+  config.aiChat = (messages = [], token: string) => {
     return {
       [E_FOUNDATION_MODEL.GPT_35_TURBO]: {
-        httpRequestUrl: 'https://api.openai.com/v1/chat/completions',
+        httpRequestUrl: (process.env.OPENAI_API_URL || 'https://api.openai.com') + '/v1/chat/completions',
         httpRequestOption: {
           ...commonRequestOption,
           data: {
             model: E_FOUNDATION_MODEL.GPT_35_TURBO,
-            messages,
+            messages
           },
           headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          }
         },
-        manufacturer: 'openai',
+        manufacturer: 'openai'
+      },
+      ////本地兼容opanai-api接口的 大语言模型，如chatGLM6b,通义千问 等。你也可以分开成多个
+      [E_FOUNDATION_MODEL.Local_GPT]: {
+        httpRequestUrl: (process.env.Local_GPT_API_URL || 'http://127.0.0.1:8000') + '/v1/chat/completions',
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.Local_GPT,
+            messages
+          },
+          headers: {
+            Authorization: `Bearer ${process.env.Local_GPT_API_KEY}`
+          }
+        },
+        manufacturer: '!openai'
       },
       [E_FOUNDATION_MODEL.ERNIE_BOT_TURBO]: {
-        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant?access_token=${process.env.WENXIN_ACCESS_TOKEN}`,
+        httpRequestUrl: `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token=${
+          token || process.env.WENXIN_ACCESS_TOKEN
+        }`,
         httpRequestOption: {
           ...commonRequestOption,
           data: {
             model: E_FOUNDATION_MODEL.ERNIE_BOT_TURBO,
-            messages,
-          },
+            messages
+          }
         },
-        manufacturer: 'baidu',
+        manufacturer: 'baidu'
       },
+      [E_FOUNDATION_MODEL.DEEPSEEK_CHAT]: {
+        httpRequestUrl: `https://api.deepseek.com/chat/completions`,
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.DEEPSEEK_CHAT,
+            messages
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        },
+        manufacturer: 'deepseek'
+      },
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        httpRequestUrl: `https://api.moonshot.cn/v1/chat/completions`,
+        httpRequestOption: {
+          ...commonRequestOption,
+          data: {
+            model: E_FOUNDATION_MODEL.MOONSHOT_V1_8K,
+            messages
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        },
+        manufacturer: 'kimi'
+      }
     };
   };
 
-  config.npmRegistryOptions = [
-    '--registry=https://registry.npmjs.org/',
-  ];
+  // 文件上传接口
+  config.uploadFile = (file: any, token: string) => {
+    return {
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        httpRequestUrl: `https://api.moonshot.cn/v1/files`,
+        httpRequestOption: {
+          data: {
+            file: file,
+            purpose: 'file-extract'
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    };
+  };
 
+  // 文件解析接口
+  config.parsingFile = (fileId: any, token: string) => {
+    return {
+      [E_FOUNDATION_MODEL.MOONSHOT_V1_8K]: {
+        analysisImageHttpRequestUrl: `https://api.moonshot.cn/v1/files/${fileId}/content`,
+        analysisImageHttpRequestOption: {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    };
+  };
+
+  config.npmRegistryOptions = ['--registry=https://registry.npmjs.org/'];
+  // 国内镜像
+  config.cnpmRegistryOptions = ['--registry=http://registry.npmmirror.com/'];
   config.buildground = '/tmp/buildground';
   config.baseNpm = '@opentiny/tiny-engine-block-build';
   config.authToken = process.env.NPM_AUTH_TOKEN; // 替换为自己的npm token
-  config.registry = 'registry.npmjs.org/';
-  config.projectName = process.env.GIT_REPO;     // 应用发布git仓库地址
-  config.gitBranch = process.env.GIT_BRANCH;     // 应用发布git代码默认提交分支
+  config.registry = 'https://registry.npmjs.org/'; // 如果部署了私仓可替换为自己私仓地址
+  config.projectName = process.env.GIT_REPO; // 应用发布git仓库地址
+  config.gitBranch = process.env.GIT_BRANCH; // 应用发布git代码默认提交分支
   config.userName = process.env.GIT_USERNAME;
   config.userToken = process.env.GIT_USER_TOKEN;
   config.email = process.env.GIT_EMAIL;
