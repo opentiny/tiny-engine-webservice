@@ -37,6 +37,7 @@ export default class AiChatController extends Controller {
           model,
           streamStatus
         });
+        
         for await (const chunk of result) {
           const content = chunk.choices[0]?.delta?.content || '';
           ctx.res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
@@ -64,5 +65,14 @@ export default class AiChatController extends Controller {
     const { content } = ctx.request.body;
 
     ctx.body = await ctx.service.appCenter.aiChat.search(content);
+  }
+
+  public async uploadFile() {
+    const { ctx } = this;
+    const stream = await ctx.getFileStream();
+    console.log('stream',stream);
+    
+
+    ctx.body = await ctx.service.appCenter.aiChat.uploadFile(stream);
   }
 }
