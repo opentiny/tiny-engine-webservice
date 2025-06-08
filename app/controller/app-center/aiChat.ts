@@ -70,8 +70,6 @@ export default class AiChatController extends Controller {
   public async uploadFile() {
     const { ctx } = this;
     const stream = await ctx.getFileStream();
-    console.log('stream',stream);
-    
 
     ctx.body = await ctx.service.appCenter.aiChat.uploadFile(stream);
   }

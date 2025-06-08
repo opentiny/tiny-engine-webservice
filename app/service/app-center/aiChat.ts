@@ -149,7 +149,6 @@ export default class AiChat extends Service {
 
     try {
       res = await client.callApi(params, request, runtime);
-      console.log('res',res);
       
     } catch (e) {
       this.ctx.logger.debug('Alibaba Cloud search failed', e);
