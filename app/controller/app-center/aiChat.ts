@@ -15,7 +15,7 @@ export default class AiChatController extends Controller {
   public async aiChat() {
     const { ctx } = this;
     const { foundationModel, messages } = ctx.request.body;
-    this.ctx.logger.info('ai接口请求参参数 model选型:', foundationModel);
+    this.logger.info('ai接口请求参参数 model选型:', foundationModel);
     if (!messages || !Array.isArray(messages)) {
       return this.ctx.helper.getResponseData('Not passing the correct message parameter');
     }
@@ -25,6 +25,7 @@ export default class AiChatController extends Controller {
     const streamStatus = foundationModel?.stream || false;
 
     if (streamStatus) {
+      ctx.status = 200;
       ctx.set({
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -37,13 +38,13 @@ export default class AiChatController extends Controller {
           model,
           streamStatus
         });
-        
+
         for await (const chunk of result) {
           const content = chunk.choices[0]?.delta?.content || '';
           ctx.res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
         }
       } catch (e: any) {
-        ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
+        this.logger.error('调用AI大模型接口失败', e);
       } finally {
         ctx.res.end(); // 关闭连接
       }

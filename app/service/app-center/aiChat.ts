@@ -47,9 +47,9 @@ export default class AiChat extends Service {
         baseURL: chatConfig.baseUrl || process.env.OPEN_AI_BASE_URL,
         defaultHeaders: {
           'X-DashScope-OssResourceResolve': 'enable'
-        },
+        }
       });
-      
+
       result = await openai.chat.completions.create({
         model: chatConfig.model || process.env.OPEN_AI_MODEL,
         messages,
@@ -58,7 +58,7 @@ export default class AiChat extends Service {
 
       return result;
     } catch (e: any) {
-      this.ctx.logger.debug(`调用AI大模型接口失败: ${(e as Error).message}`);
+      this.logger.error('调用AI大模型接口失败:', e);
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
   }
@@ -149,10 +149,9 @@ export default class AiChat extends Service {
 
     try {
       res = await client.callApi(params, request, runtime);
-      
     } catch (e) {
-      this.ctx.logger.debug('Alibaba Cloud search failed', e);
-      return this.ctx.helper.getResponseData('知识库检索接口调用失败');
+      this.logger.error('知识库检索接口调用失败', e);
+      return this.ctx.helper.getResponseData(`知识库检索接口调用失败:${e}`);
     }
 
     return this.getSearchList(res);
@@ -180,9 +179,9 @@ export default class AiChat extends Service {
       });
 
       return result.data.data;
-    } catch (error) {
-      this.ctx.logger.error('获取上传凭证失败:', error);
-      throw new Error('获取上传凭证失败');
+    } catch (e) {
+      this.logger.error('获取上传凭证失败:', e);
+      return this.ctx.helper.getResponseData(`获取上传凭证失败:${e}`);
     }
   }
 
@@ -219,9 +218,9 @@ export default class AiChat extends Service {
         ossUrl: `oss://${key}`,
         expireTime: new Date(Date.now() + 48 * 60 * 60 * 1000)
       };
-    } catch (error) {
-      this.ctx.logger.error('上传文件到OSS失败:', error);
-      throw new Error('上传文件到OSS失败');
+    } catch (e) {
+      this.logger.error('上传文件到OSS失败:', e);
+      return this.ctx.helper.getResponseData(`上传文件到OSS失败:${e}`);
     }
   }
 
@@ -256,11 +255,12 @@ export default class AiChat extends Service {
           expireTime: expireTime.toISOString()
         }
       };
-    } catch (error) {
+    } catch (e) {
       if (fs.existsSync(tmpFilePath)) {
         fs.unlinkSync(tmpFilePath);
       }
-      this.ctx.logger.error('上传文件到OSS失败:', error);
+      this.logger.error('文件上传失败:', e);
+      return this.ctx.helper.getResponseData(`文件上传失败:${e}`);
     }
   }
 }
