@@ -40,9 +40,10 @@ export default class AiChatController extends Controller {
         });
 
         for await (const chunk of result) {
-          const content = chunk.choices[0]?.delta?.content || '';
-          ctx.res.write(`data: ${JSON.stringify({ content })}\n\n`); // SSE 格式
+          ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`); // SSE 格式
         }
+        // 添加结束标记
+        ctx.res.write('data: [DONE]');
       } catch (e: any) {
         this.logger.error('调用AI大模型接口失败', e);
       } finally {
