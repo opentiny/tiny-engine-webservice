@@ -24,7 +24,8 @@
     "part-test": "egg-bin test",
     "tsc": "ets && tsc -p tsconfig.json",
     "lint": "eslint . --ext .ts --fix",
-    "clean": "ets clean"
+    "clean": "ets clean",
+    "sql": "node ./scripts/sqlScript.mjs"
   },
   "repository": {
     "type": "git",
@@ -65,6 +66,7 @@
     "http-status-codes": "^2.2.0",
     "koa-connect": "^2.1.0",
     "moment": "^2.29.4",
+    "mysql2": "^3.14.2",
     "openai": "^4.68.4",
     "proxy-agent": "^5.0.0",
     "qs": "^6.10.1",
