@@ -31,9 +31,8 @@ const targetPool = mysql.createPool({ ...dbConfig });
 const batchSize = 1000;
 export default class SqlScript {
 
-
   /**
-   * 通用数据迁移方法 t_platform、t_platform_history单独执行插入数据
+   * 通用数据迁移方法 
    * @param {string} sourceTable 源表名
    * @param {string} targetTable 目标表名
    * @param {Function} transformFn 数据转换函数
@@ -132,8 +131,8 @@ export default class SqlScript {
     const transformFn = (item) => ({
       id: item.id,
       name: item.name,
-      platform_id: item.platform,
-      platform_history_id: item.platform_history == null ? 1 : item.platform_history,
+      platform_id: 1,
+      platform_history_id: 1,
       publish_url: item.obs_url,
       editor_url: item.editor_url,
       visit_url: item.visit_url,
@@ -209,7 +208,7 @@ export default class SqlScript {
       latest_history_id: item.current_history,
       screenshot: item.screenshot,
       path: item.path,
-      occupier_by: item.occupier,
+      occupier_by: "1",
       is_official: item.isOfficial,
       public: item.public,
       is_default: item.isDefault,
@@ -504,7 +503,7 @@ export default class SqlScript {
       group: item.group,
       depth: item.depth,
       is_page: item.is_page,
-      occupier_by: item.occupier,
+      occupier_by: "1",
       is_default: item.is_default,
       content_blocks: item.content_blocks,
       tenant_id: item.tenant == null ? "1" : item.tenant,
@@ -582,6 +581,93 @@ export default class SqlScript {
     await this.migrateTable('tenants', 't_tenant', transformFn);
   }
 
+  async platform() {
+    let targetConn = null;
+    try {
+      targetConn = await targetPool.getConnection();
+
+      // 修正后的平台插入语句（注意反引号和日期格式）
+      const platformSql = `
+      INSERT INTO t_platform 
+      VALUES (
+        1, 
+        'default', 
+        1, 
+        NULL, 
+        '专用设计器', 
+        '1.0.0', 
+        1, 
+        639, 
+        NULL, 
+        NULL, 
+        NULL, 
+        1, 
+        NULL, 
+        NULL, 
+        NULL, 
+        NULL, 
+        NULL, 
+        NULL, 
+        NULL, 
+        NULL, 
+        '1', 
+        NULL, 
+        '1', 
+        '1', 
+        '1', 
+        '2024-11-14 22:17:39', 
+        '2024-11-14 22:17:39'
+      )`;
+
+      // 修正后的平台历史插入语句
+      const platformHistorySql = `
+      INSERT INTO t_platform_history 
+      VALUES (
+        1, 
+        1, 
+        '1.0.0', 
+        'default', 
+        'http://tinyengine.com', 
+        '默认设计器', 
+        NULL, 
+        639, 
+        1, 
+        '@opentiny/lowcode-alpha-material-materialstwo-1505', 
+        '1.0.8', 
+        NULL, 
+        '1', 
+        NULL, 
+        '1', 
+        '1', 
+        '1', 
+        '2024-11-14 22:20:25', 
+        '2024-11-14 22:20:25'
+      )`;
+
+      // 执行插入
+      await targetConn.query(platformSql);
+      await targetConn.query(platformHistorySql);
+
+      // 插入完成后验证
+      logger.info('Inserted platform and platform history successfully');
+
+      // 选择性地查询插入结果进行验证
+      const [rows] = await targetConn.query('SELECT * FROM t_platform WHERE id = 1');
+      if (rows.length === 0) {
+        throw new Error('Platform data not inserted correctly');
+      }
+
+    } catch (error) {
+      logger.error(`Error inserting platform data: ${error.message}`);
+      throw error; // 重新抛出错误以便上层处理
+    } finally {
+      if (targetConn) {
+        await targetConn.release();
+      }
+    }
+  }
+
+  
 }
 
 // 执行迁移
@@ -613,13 +699,18 @@ export default class SqlScript {
     await script.pagesHistories();
     await script.sources();
     await script.tenant();
+    await script.platform();
     logger.info('All migrations completed successfully');
   } catch (err) {
     logger.error('Migration failed:', err);
     process.exit(1);
   } finally {
-    // 关闭连接池
-    await sourcePool.end();
-    await targetPool.end();
+    try {
+      // 确保连接池在所有操作完成后关闭
+      await sourcePool.end();
+      await targetPool.end();
+    } catch (closeError) {
+      logger.error('Error closing connection pools:', closeError);
+    }
   }
 })();
