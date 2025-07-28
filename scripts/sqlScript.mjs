@@ -14,11 +14,22 @@ import Logger from './logger.mjs';
 
 const logger = new Logger('sqlScript')
 // 数据库连接池配置
-const dbConfig = {
+const nodeConfig = {
+  host: 'localhost',
+  user: 'root', // 用户名
+  password: '111111', // 密码
+  database: 'tiny_engine-data', // 数据库名
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 10000
+};
+
+const javaConfig = {
   host: 'localhost',
   user: 'root',
   password: '111111',
-  database: 'tiny_engine-data',
+  database: 'tiny-engine-java',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -26,8 +37,8 @@ const dbConfig = {
 };
 
 // 创建连接池
-const sourcePool = mysql.createPool({ ...dbConfig });
-const targetPool = mysql.createPool({ ...dbConfig });
+const sourcePool = mysql.createPool({ ...nodeConfig });
+const targetPool = mysql.createPool({ ...javaConfig });
 const batchSize = 1000;
 export default class SqlScript {
 
