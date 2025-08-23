@@ -18,6 +18,8 @@ export default (appInfo) => {
   const config = {} as PowerPartial<EggAppConfig>;
 
   config.dataCenter = {
+    host: process.env.DATA_CENTER_URL || 'http://localhost:1337',
+    sessionKeyPrefix: 'lowcode:data:',
     developerToken: 'developer'
   };
   // override config from framework / plugin
