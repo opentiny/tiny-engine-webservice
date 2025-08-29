@@ -50,15 +50,20 @@ export default class AiChat extends Service {
         }
       });
 
-      result = await openai.chat.completions.create({
+      const options: any = {
         model: chatConfig.model || process.env.OPEN_AI_MODEL,
         messages,
-        stream: chatConfig.streamStatus
-      });
+        stream: chatConfig.stream
+      };
+      if (chatConfig.tools.length) {
+        options.tools = chatConfig.tools;
+      }
+
+      result = await openai.chat.completions.create(options);
 
       return result;
     } catch (e: any) {
-      this.logger.error('调用AI大模型接口失败:', e);
+      this.ctx.logger.error(`调用AI大模型接口失败: ${(e as Error).message}`);
       return this.ctx.helper.getResponseData(`调用AI大模型接口失败: ${(e as Error).message}`);
     }
   }
@@ -150,7 +155,7 @@ export default class AiChat extends Service {
     try {
       res = await client.callApi(params, request, runtime);
     } catch (e) {
-      this.logger.error('知识库检索接口调用失败', e);
+      this.ctx.logger.error('Alibaba Cloud search failed', e);
       return this.ctx.helper.getResponseData(`知识库检索接口调用失败:${e}`);
     }
 
@@ -180,7 +185,7 @@ export default class AiChat extends Service {
 
       return result.data.data;
     } catch (e) {
-      this.logger.error('获取上传凭证失败:', e);
+      this.ctx.logger.error('获取上传凭证失败:', e);
       return this.ctx.helper.getResponseData(`获取上传凭证失败:${e}`);
     }
   }
@@ -219,7 +224,7 @@ export default class AiChat extends Service {
         expireTime: new Date(Date.now() + 48 * 60 * 60 * 1000)
       };
     } catch (e) {
-      this.logger.error('上传文件到OSS失败:', e);
+      this.ctx.logger.error('上传文件到OSS失败:', e);
       return this.ctx.helper.getResponseData(`上传文件到OSS失败:${e}`);
     }
   }
@@ -259,7 +264,7 @@ export default class AiChat extends Service {
       if (fs.existsSync(tmpFilePath)) {
         fs.unlinkSync(tmpFilePath);
       }
-      this.logger.error('文件上传失败:', e);
+      this.ctx.logger.error('文件上传失败:', e);
       return this.ctx.helper.getResponseData(`文件上传失败:${e}`);
     }
   }

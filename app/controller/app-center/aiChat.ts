@@ -14,17 +14,20 @@ import { Controller } from 'egg';
 export default class AiChatController extends Controller {
   public async aiChat() {
     const { ctx } = this;
-    const { foundationModel, messages } = ctx.request.body;
-    this.logger.info('ai接口请求参参数 model选型:', foundationModel);
+    const options = ctx.request.body;
+    this.ctx.logger.info('ai接口请求参数 model选型:', options);
+
+    const messages = options.messages;
     if (!messages || !Array.isArray(messages)) {
       return this.ctx.helper.getResponseData('Not passing the correct message parameter');
     }
-    const apiKey = foundationModel?.apiKey;
-    const baseUrl = foundationModel?.baseUrl;
-    const model = foundationModel?.model;
-    const streamStatus = foundationModel?.stream || false;
+    const apiKey = ctx.request.header?.authorization?.replace('Bearer', '');
+    const baseUrl = options?.baseUrl;
+    const model = options?.model;
+    const stream = options?.stream || false;
+    const tools = options?.tools || [];
 
-    if (streamStatus) {
+    if (stream) {
       ctx.status = 200;
       ctx.set({
         'Content-Type': 'text/event-stream',
@@ -36,17 +39,20 @@ export default class AiChatController extends Controller {
           apiKey,
           baseUrl,
           model,
-          streamStatus
+          stream,
+          tools
         });
 
         for await (const chunk of result) {
           ctx.res.write(`data: ${JSON.stringify(chunk)}\n\n`); // SSE 格式
         }
+
         // 添加结束标记
         ctx.res.write('data: [DONE]');
       } catch (e: any) {
-        this.logger.error('调用AI大模型接口失败', e);
+        this.ctx.logger.error(`调用AI大模型接口失败: ${(e as Error).message}`);
       } finally {
+        console.log('end');
         ctx.res.end(); // 关闭连接
       }
 
@@ -58,7 +64,8 @@ export default class AiChatController extends Controller {
       apiKey,
       baseUrl,
       model,
-      streamStatus
+      stream,
+      tools
     });
   }
 
