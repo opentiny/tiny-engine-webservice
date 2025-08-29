@@ -86,6 +86,19 @@ export default (appInfo) => {
     }
   };
 
+  config.multipart = {
+    mode: 'stream', // 必须设置为 stream 模式
+    autoFields: true, // 自动解析字段
+    fieldNameSize: 100,
+    fieldSize: '100kb',
+    fields: 5,
+    fileSize: '10mb',
+    whitelist: ['.jpg', '.png', '.jpeg'], // 根据需求调整
+    cleanSchedule: {
+      cron: '0 30 4 * * *' // 每天4:30清理临时文件
+    }
+  };
+
   config.previewTemplate = {
     default: {
       vue: '@opentiny/tiny-engine-preview-vue'
@@ -260,7 +273,7 @@ export default (appInfo) => {
             messages
           },
           headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+            Authorization: `Bearer ${token || process.env.OPENAI_API_KEY}`
           }
         },
         manufacturer: 'openai'

@@ -113,5 +113,6 @@ export default (app: Application) => {
 
   // AI大模型聊天接口
   subRouter.post('/ai/chat', controller.appCenter.aiChat.aiChat);
-  subRouter.post('/ai/files', controller.appCenter.aiChat.uploadFile);
+  subRouter.post('/ai/search', controller.appCenter.aiChat.search);
+  subRouter.post('/ai/uploadFile', controller.appCenter.aiChat.uploadFile);
 };
